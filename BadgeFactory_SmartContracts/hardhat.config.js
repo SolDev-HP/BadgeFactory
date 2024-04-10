@@ -4,7 +4,7 @@ require("dotenv").config();
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   // Default we take internal hardhat node
-  defaultNetwork: hardhat,
+  // defaultNetwork: hardhat,
   sourcify: {
     enabled: false,
   },
@@ -32,11 +32,11 @@ module.exports = {
       },
     },
     hardhat_morphl2_testnet: {
-      url: process.env.MORPHL2_RPC,
+      url: "", //process.env.MORPHL2_RPC,
       chainId: 2710,
       currency: "ETH",
       // Add MorphL2 testnet details like chainid and stuff here
-      accounts: [`0x${process.env.OWNER}`],
+      // accounts: [`0x${process.env.OWNER}`],
     },
   },
   solidity: {
