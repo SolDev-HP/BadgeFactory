@@ -1,0 +1,33 @@
+// Morph sepolia contract addresses
+
+// ---- On Eth Sepolia testnet
+// Main contracts
+const rollup = "0x9672010622c9511127b56028465afd1d8ecabc65";
+const morph_portal = "0xef2afa792412ae5edf7e54dc6830f5117e2bd22c";
+const morph_staking = "0xce61765bde94b30c529848e3f008ac06e48889fc";
+
+// Standard bridge contracts
+const bridge_l1_std = "0xcb95f07b1f60868618752ceabbe4e52a1f564336";
+const bridge_l2_std = "0x4200000000000000000000000000000000000010";
+const bridge_l1_nft = "0x107241e85674240d8a0efe47d035e44a9076240c";
+const bridge_l2_nft = "0x4200000000000000000000000000000000000014";
+
+// Cross domain messangers
+const messanger_l1 = "0xfe26613a717a793560df394928bcc22ed0d8542e";
+const messanger_l2 = "0x530000000000000000000000000000000000000F";
+const messanger_l2_to_l1 = "0x530000000000000000000000000000000000000F";
+
+// Tokens
+const usdt_sepolia = "0x5F4c7D793D898e64eddd1fC82D27EcfB5F6e4596";
+
+// ---- On MorphL2 testnet
+// Other predeploys on l2 testnet
+const gas_price_oracle = "0x530000000000000000000000000000000000000F";
+const l1_block = "0x530000000000000000000000000000000000000F";
+const l1_blocknumber = "0x530000000000000000000000000000000000000F";
+const l1_feevault = "0x530000000000000000000000000000000000000F";
+const seq_feevault = "0x530000000000000000000000000000000000000F";
+const base_feevault = "0x530000000000000000000000000000000000000F";
+const weth = "0x4200000000000000000000000000000000000006";
+
+const usdt_morphl2 = "0xB4A71512cf4F3A8f675D2aeC76198D6419D219C7";
