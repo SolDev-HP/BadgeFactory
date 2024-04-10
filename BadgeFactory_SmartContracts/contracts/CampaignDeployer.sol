@@ -28,9 +28,35 @@ contract CampaignDeployer {
         // It means, the deployerbadgefactory contract
         _deployer = msg.sender;
     }
+
     // ------------- Receive Function
     // ------------- Fallback Function
+
     // ------------- External Function
+
+    /// @notice Create a campaign, return address where campaign is active at
+    /// @dev extcodesize comments from docs present
+    /// @param _campaign_data bytes param with campaign code to deploy
+    /// @return campAddr returns address the campaign is active at
+    function deployCampaign(
+        bytes memory _campaign_data
+    ) external onlyDeployer returns (address campAddr) {
+        assembly {
+            // Create a campaign, return address where campaign is active at
+            campAddr := create(
+                0,
+                add(_campaign_data, 0x20),
+                mload(_campaign_data)
+            )
+            // MorphL2 docs: https://docs.morphl2.io/docs/build-on-morph/build-on-morph/difference-between-morph-and-ethereum/
+            // Storage proof extcodesize opcode verification
+            // Instead, we store the contract size in storage at contract creation.
+            if iszero(extcodesize(campAddr)) {
+                revert(0, 0)
+            }
+        }
+    }
+
     // ------------- Public Functions
     // ------------- Internal Functions
     // ------------- Private Function
