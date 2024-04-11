@@ -53,7 +53,10 @@ contract RewardPoints {
         campaign_owner_console = camp_owner;
     }
 
-    function subscribe_customer(address customer) external onlyConsole {
+    // This can be done by customer themselves, but for now we keep
+    // access control with console so everything can be done from
+    // console
+    function subscribe(address customer) external onlyConsole {
         // Assign custid->address
         _cust_id_to_cust_address[_total_customers_counter] = customer;
         // Increase total number
@@ -62,7 +65,7 @@ contract RewardPoints {
         _is_cust_subscribed[customer] = true;
     }
 
-    function unsubscribe_customer(address customer) external onlyConsole {
+    function unsubscribe(address customer) external onlyConsole {
         // Weeeeell, you can't right now, not the focus of this POC
         // _is_cust_subscribed[customer] = false;
     }
