@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./interfaces/IDeployer.sol";
+// import "./interfaces/IDeployer.sol";
+import "./LoyaltyConsole.sol";
 
 /// @title BadgeFactory Deployer smart contract
 /// @author SolDev-HP
@@ -26,7 +27,6 @@ contract BadgeFactory {
     // ------------- State Vars
     // BadgeFactory Owner - SolDev-HP
     address private _factory_owner;
-    address private _console_deployer;
     // List of all available LoyaltyConsoles addresses
     // with their deployer? @todo: check
     // Register: Entity or Customer
@@ -72,11 +72,7 @@ contract BadgeFactory {
     // ------------- External Function
     // ------------- Public Functions
 
-    // Owner only functionality
-    function Setup_Deployer(address _deployer_address) public onlyFactoryOwner {
-        _console_deployer = _deployer_address;
-    }
-
+    // Public functionality
     function register(bool _as_entity) public {
         // Register the person, assign role
         // Role assign from frontend, expect role to be entity if _as_entity is set
@@ -91,16 +87,32 @@ contract BadgeFactory {
         }
     }
 
+    function check_user_role(address _user) public view returns (uint8 _role) {
+        _role = 0;
+        if (_address_is_Entity[_user]) {
+            _role = 1;
+        }
+        if (_address_is_Customer[_user]) {
+            _role = 2;
+        }
+    }
+
+    // Registered Users Only functionality
     // Deploy a Loyalty Management system
-    function deploy_console(
-        bytes memory console_data
-    ) public registeredUsersOnly returns (address _console_addr) {
+    // Deploys LoyaltyConsole.sol contract and returns the added it's deployed at
+    function deploy_console()
+        public
+        registeredUsersOnly
+        returns (LoyaltyConsole _console_addr)
+    {
         // Deploy Console
-        _console_addr = IDeployer(_console_deployer).deploy(console_data);
+        _console_addr = new LoyaltyConsole(address(this));
         // Assert console address though, we need console to be deployed
-        assert(_console_addr != address(0));
+        assert(address(_console_addr) != address(0));
         // Update total consoles list for the sender
-        _address_deployed_loyaltyConsoles_list[msg.sender].push(_console_addr);
+        _address_deployed_loyaltyConsoles_list[msg.sender].push(
+            address(_console_addr)
+        );
     }
     // ------------- Internal Functions
     // ------------- Private Function

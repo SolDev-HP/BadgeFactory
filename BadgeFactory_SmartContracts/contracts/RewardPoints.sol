@@ -12,6 +12,12 @@ contract RewardPoints {
     // ------------- State Vars
     address public campaign_owner;
 
+    // ------------- Modifier
+    modifier onlyConsole() {
+        require(msg.sender == campaign_owner, "OnlyConsole!");
+        _;
+    }
+
     // Reward points can be
     // - Lifetype validity, no expiry, can be used anytime
     // - limited time validity, expires
@@ -26,4 +32,11 @@ contract RewardPoints {
     // Customers can
     // redeem reward points
     // transfer reward points to friends, family
+    constructor() {
+        campaign_owner = msg.sender;
+    }
+
+    function check_points() external view onlyConsole returns (uint) {
+        return 1;
+    }
 }
