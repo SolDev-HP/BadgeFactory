@@ -9,3 +9,8 @@ Structure:
 
 This hackathon submission goal would be finished SmartContracts and some part of dashboard for easy access and visibility into whole vision of BadgeFactory.
 More will be added here as I progress on creating BadgeFactory for this hackathon (MorphL2 Sparkloom)
+
+----
+Update: 11/04 
+This is how I see these projects will interact, this will keep updating as we implement the basic idea of loyalty management system console for any Entity (Business/Brand/Project)
+![Will be updated periodically throughout](/assets/imgs/BadgeFactory-uml-flow.png)
