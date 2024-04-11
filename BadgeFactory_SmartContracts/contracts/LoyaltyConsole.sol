@@ -67,19 +67,19 @@ contract LoyaltyConsole {
         // _campaign_id for RewardPoints(1), Badges(2), Tickets(3), Codes(4)
         // Probably needs more data along with each type, changes as we go
         if (_campaign_id == 1) {
-            _campaign_addr = IDeployer(_campaigns_deployer).deploy(
+            _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
                 type(RewardPoints).creationCode
             );
         } else if (_campaign_id == 2) {
-            _campaign_addr = IDeployer(_campaigns_deployer).deploy(
+            _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
                 type(Badges).creationCode
             );
         } else if (_campaign_id == 3) {
-            _campaign_addr = IDeployer(_campaigns_deployer).deploy(
+            _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
                 type(Tickets).creationCode
             );
         } else if (_campaign_id == 4) {
-            _campaign_addr = IDeployer(_campaigns_deployer).deploy(
+            _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
                 type(Codes).creationCode
             );
         }

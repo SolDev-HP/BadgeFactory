@@ -3,6 +3,9 @@ pragma solidity ^0.8.20;
 
 // import "./interfaces/IDeployer.sol";
 import "./LoyaltyConsole.sol";
+import "./interfaces/IDeployer.sol";
+import "./interfaces/ILoyaltyConsole.sol";
+import "./Deployer.sol";
 
 /// @title BadgeFactory Deployer smart contract
 /// @author SolDev-HP
@@ -27,6 +30,7 @@ contract BadgeFactory {
     // ------------- State Vars
     // BadgeFactory Owner - SolDev-HP
     address private _factory_owner;
+    address private _deployer_address;
     // List of all available LoyaltyConsoles addresses
     // with their deployer? @todo: check
     // Register: Entity or Customer
@@ -57,6 +61,8 @@ contract BadgeFactory {
     // ------------- Constructor
     constructor() {
         _factory_owner = msg.sender;
+        // Setup deployer
+        setup_deployer();
     }
 
     // ------------- Receive Function
@@ -109,11 +115,46 @@ contract BadgeFactory {
         _console_addr = new LoyaltyConsole(address(this));
         // Assert console address though, we need console to be deployed
         assert(address(_console_addr) != address(0));
+        // Setup deployer in loyaltyConsole
+        ILoyaltyConsole(address(_console_addr)).set_campaign_deployer(
+            _deployer_address
+        );
+        // Setup deployer to accept this console as accessor
+        IDeployer(_deployer_address).change_accessor(
+            address(_console_addr),
+            true
+        );
+
         // Update total consoles list for the sender
         _address_deployed_loyaltyConsoles_list[msg.sender].push(
             address(_console_addr)
         );
     }
+
+    // Only factory owner related functions
+    // mainly to setup the deployer, deployer is a contract that takes bytecode and deploy it
+    function setup_deployer()
+        public
+        onlyFactoryOwner
+        returns (address deployerAddr)
+    {
+        deployerAddr = address(new Deployer());
+        // Assert we placed our deployer onchain
+        assert(deployerAddr != address(0));
+        // Setup our deployer
+        _deployer_address = deployerAddr;
+    }
+
+    // Check deployer address, only for owner
+    function get_deployer()
+        public
+        view
+        onlyFactoryOwner
+        returns (address deployer)
+    {
+        deployer = _deployer_address;
+    }
+
     // ------------- Internal Functions
     // ------------- Private Function
 }
