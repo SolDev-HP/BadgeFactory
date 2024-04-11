@@ -25,8 +25,8 @@ contract Badges {
     // Customers can
     // Claim their badges
     // transfer badges to friends, family
-    constructor() {
-        campaign_owner = msg.sender;
+    constructor(address camp_owner) {
+        campaign_owner = camp_owner;
     }
 
     function check_badges() external view onlyConsole returns (uint) {

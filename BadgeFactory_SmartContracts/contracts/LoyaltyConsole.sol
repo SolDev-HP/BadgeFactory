@@ -37,14 +37,17 @@ contract LoyaltyConsole {
     }
 
     // ------------- Modifiers
+    // Initiators should be these roles
     modifier roleEntity() {
-        require(_is_address_Entity[msg.sender], "EntityOnly");
+        require(_is_address_Entity[tx.origin], "EntityOnly");
         _;
     }
     modifier roleCustomer() {
-        require(_is_address_Customer[msg.sender], "CustOnly");
+        require(_is_address_Customer[tx.origin], "CustOnly");
         _;
     }
+
+    // Updater should be this role
     modifier roleFactory() {
         require(_factory == msg.sender, "FactoryOnly!");
         _;
@@ -64,23 +67,42 @@ contract LoyaltyConsole {
         // Assumed
         require((0 < _campaign_id) && (_campaign_id < 5), "1to4Only!");
         require(address(_campaigns_deployer) != address(0), "DeployerNeeded!");
+        // This is where campaign bytecode will reside
+        bytes memory campaign_code;
+
         // _campaign_id for RewardPoints(1), Badges(2), Tickets(3), Codes(4)
         // Probably needs more data along with each type, changes as we go
         if (_campaign_id == 1) {
+            campaign_code = abi.encodePacked(
+                type(RewardPoints).creationCode,
+                abi.encode(address(this))
+            );
             _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
-                type(RewardPoints).creationCode
+                campaign_code
             );
         } else if (_campaign_id == 2) {
+            campaign_code = abi.encodePacked(
+                type(Badges).creationCode,
+                abi.encode(address(this))
+            );
             _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
-                type(Badges).creationCode
+                campaign_code
             );
         } else if (_campaign_id == 3) {
+            campaign_code = abi.encodePacked(
+                type(Tickets).creationCode,
+                abi.encode(address(this))
+            );
             _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
-                type(Tickets).creationCode
+                campaign_code
             );
         } else if (_campaign_id == 4) {
+            campaign_code = abi.encodePacked(
+                type(Codes).creationCode,
+                abi.encode(address(this))
+            );
             _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
-                type(Codes).creationCode
+                campaign_code
             );
         }
 

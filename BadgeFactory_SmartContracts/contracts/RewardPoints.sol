@@ -32,11 +32,15 @@ contract RewardPoints {
     // Customers can
     // redeem reward points
     // transfer reward points to friends, family
-    constructor() {
-        campaign_owner = msg.sender;
+    constructor(address camp_owner) {
+        campaign_owner = camp_owner;
     }
 
     function check_points() external view onlyConsole returns (uint) {
         return 1;
+    }
+
+    function check_owner() external view returns (address) {
+        return campaign_owner;
     }
 }

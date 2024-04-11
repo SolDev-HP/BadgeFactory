@@ -16,6 +16,10 @@ contract Deployer {
     address private _factory; // Deployer handler - BadgeFactory
     mapping(address => bool) private _is_accessor; // LoyaltyConsole is accessing this
 
+    // Events for flow check/tests, remove in prod if not required
+    event AccessorAdded(address _accessor);
+    event CampaignDeployed(address _campAddr);
+
     // ------------- Modifiers
     // we need owner modifier, easy check nothing fancy so no lib use for now
     modifier onlyFactory() {
@@ -41,6 +45,7 @@ contract Deployer {
         bool _allow
     ) external onlyFactory returns (bool) {
         _is_accessor[_console_addr] = _allow;
+        emit AccessorAdded(_console_addr);
         return true;
     }
 
@@ -70,6 +75,7 @@ contract Deployer {
                 revert(0, 0)
             }
         }
+        emit CampaignDeployed(campAddr);
     }
 
     // ------------- Public Functions

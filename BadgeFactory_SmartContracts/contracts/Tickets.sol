@@ -13,8 +13,8 @@ contract Tickets {
         _;
     }
 
-    constructor() {
-        campaign_owner = msg.sender;
+    constructor(address camp_owner) {
+        campaign_owner = camp_owner;
     }
 
     // Tester function to check deployment

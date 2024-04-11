@@ -13,8 +13,8 @@ contract Codes {
         _;
     }
 
-    constructor() {
-        campaign_owner = msg.sender;
+    constructor(address camp_code) {
+        campaign_owner = camp_code;
     }
 
     // Tester function to check deployment

@@ -43,6 +43,9 @@ contract BadgeFactory {
     mapping(address => bool) private _address_is_Customer;
     //mapping(address => uint8) private _user_role;
 
+    // Using events for mapping flow, may or may not use in prod
+    event ConsoleCreated(address _consoleAddr);
+    event DeployerAt(address _campDeployer);
     // ------------- Modifiers
     modifier onlyFactoryOwner() {
         require(msg.sender == _factory_owner, "HPOnly!");
@@ -62,7 +65,8 @@ contract BadgeFactory {
     constructor() {
         _factory_owner = msg.sender;
         // Setup deployer
-        setup_deployer();
+        address campdep = setup_deployer();
+        emit DeployerAt(campdep);
     }
 
     // ------------- Receive Function
@@ -115,6 +119,7 @@ contract BadgeFactory {
         _console_addr = new LoyaltyConsole(address(this));
         // Assert console address though, we need console to be deployed
         assert(address(_console_addr) != address(0));
+        emit ConsoleCreated(address(_console_addr));
         // Setup deployer in loyaltyConsole
         ILoyaltyConsole(address(_console_addr)).set_campaign_deployer(
             _deployer_address
@@ -131,20 +136,6 @@ contract BadgeFactory {
         );
     }
 
-    // Only factory owner related functions
-    // mainly to setup the deployer, deployer is a contract that takes bytecode and deploy it
-    function setup_deployer()
-        public
-        onlyFactoryOwner
-        returns (address deployerAddr)
-    {
-        deployerAddr = address(new Deployer());
-        // Assert we placed our deployer onchain
-        assert(deployerAddr != address(0));
-        // Setup our deployer
-        _deployer_address = deployerAddr;
-    }
-
     // Check deployer address, only for owner
     function get_deployer()
         public
@@ -156,5 +147,14 @@ contract BadgeFactory {
     }
 
     // ------------- Internal Functions
+    // Only factory owner related functions
+    // mainly to setup the deployer, deployer is a contract that takes bytecode and deploy it
+    function setup_deployer() internal returns (address deployerAddr) {
+        deployerAddr = address(new Deployer());
+        // Assert we placed our deployer onchain
+        assert(deployerAddr != address(0));
+        // Setup our deployer
+        _deployer_address = deployerAddr;
+    }
     // ------------- Private Function
 }
