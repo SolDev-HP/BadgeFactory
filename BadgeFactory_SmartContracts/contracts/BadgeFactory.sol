@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "./interfaces/IDeployer.sol";
+
 /// @title BadgeFactory Deployer smart contract
 /// @author SolDev-HP
 /// @notice This is the main BadgeFactory contract, that will be connected to frontend, -
@@ -13,7 +15,7 @@ pragma solidity ^0.8.20;
 /// LoyaltyConsole access can grant campaign_deploy rights to Entity,
 /// LoyaltyConsole access can grant registration, redeem, claim, transfer loyalty campaigns rights to Customer
 /// 	registration: register_for_given_entitys_loyalty_system (System name?)
-/// 	redeem - depends on campaign contract (RewardPoints, LoyaltyBadges, Tickets, Codes) : CampaignContext
+/// 	redeem - depends on campaign contract (RewardPoints, Badges, Tickets, Codes) : CampaignContext
 /// 	claim - depends on campaign contract
 /// 	transfer - depends on campaign contract
 /// @dev Main deployer of BadgeFactory - Manager of sub deployments
@@ -22,31 +24,39 @@ pragma solidity ^0.8.20;
 /// Ability for brand/business to deploy their chosen campaign
 contract BadgeFactory {
     // ------------- State Vars
-    // BadgeFactory Owner
-    address private _owner;
-
-    // This will go into LoyaltyConsole.sol
-    // BadgeFactory Users
-    // struct Campaigns {
-    //     uint256 _campaign_id;
-    //     address _campaign_deployed_at;
-    //     // A way to identify campaign type (points, badges, tickets etc)
-    // }
-    // mapping(address => Campaigns[]) public campaign_deployers;
-
+    // BadgeFactory Owner - SolDev-HP
+    address private _factory_owner;
+    address private _console_deployer;
+    // List of all available LoyaltyConsoles addresses
+    // with their deployer? @todo: check
+    // Register: Entity or Customer
+    mapping(address => address[])
+        private _address_deployed_loyaltyConsoles_list;
     // Badgefactory registery, role assignment
-    mapping(address => bool) private _has_registered;
-    mapping(address => uint8) private _user_role;
-    // Length of Campaigns returned from the mapping can be used to check total
+    // _has_registered can be checked easily with assigned role,
+    // role inquiry will happen anyway when we execute modifiers
+    mapping(address => bool) private _address_is_Entity;
+    mapping(address => bool) private _address_is_Customer;
+    //mapping(address => uint8) private _user_role;
+
     // ------------- Modifiers
-    modifier onlyOwner() {
-        require(msg.sender == _owner, "OwnerOnly!");
+    modifier onlyFactoryOwner() {
+        require(msg.sender == _factory_owner, "HPOnly!");
+        _;
+    }
+
+    // Registered users only modifier
+    modifier registeredUsersOnly() {
+        require(
+            _address_is_Entity[msg.sender] || _address_is_Customer[msg.sender],
+            "RegisteredOnly!"
+        );
         _;
     }
 
     // ------------- Constructor
     constructor() {
-        _owner = msg.sender;
+        _factory_owner = msg.sender;
     }
 
     // ------------- Receive Function
@@ -60,10 +70,38 @@ contract BadgeFactory {
     }
 
     // ------------- External Function
-    // We may allow external contracts to deploy campaigns later,
-    // for now this is to be used by EOAs only
-
     // ------------- Public Functions
+
+    // Owner only functionality
+    function Setup_Deployer(address _deployer_address) public onlyFactoryOwner {
+        _console_deployer = _deployer_address;
+    }
+
+    function register(bool _as_entity) public {
+        // Register the person, assign role
+        // Role assign from frontend, expect role to be entity if _as_entity is set
+        if (_as_entity) {
+            // Register them as entity
+            // BadgeFactory can check msg.value to charge
+            // for the deployment of loyaltyconsole for themselves
+            // If badgefactory offers enough, this will be revisited
+            _address_is_Entity[msg.sender] = true;
+        } else {
+            _address_is_Customer[msg.sender] = true;
+        }
+    }
+
+    // Deploy a Loyalty Management system
+    function deploy_console(
+        bytes memory console_data
+    ) public registeredUsersOnly returns (address _console_addr) {
+        // Deploy Console
+        _console_addr = IDeployer(_console_deployer).deploy(console_data);
+        // Assert console address though, we need console to be deployed
+        assert(_console_addr != address(0));
+        // Update total consoles list for the sender
+        _address_deployed_loyaltyConsoles_list[msg.sender].push(_console_addr);
+    }
     // ------------- Internal Functions
     // ------------- Private Function
 }

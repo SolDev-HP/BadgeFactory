@@ -6,7 +6,7 @@ pragma solidity 0.8.20;
 /// @author SolDev-HP
 /// @notice We have four supported campaign types
 /// 1. Reward points - RewardPoints.sol
-/// 2. Loyalty Badges - LoyaltyBadges.sol
+/// 2. Loyalty Badges - Badges.sol
 /// 3. Tickets - Tickets.sol - Time dependent entry pass
 /// 4. Discount/Coupon code - Codes.sol
 /// @dev Given campaign name, and the msg sender,
@@ -38,7 +38,7 @@ contract CampaignDeployer {
     /// @dev extcodesize comments from docs present
     /// @param _campaign_data bytes param with campaign code to deploy
     /// @return campAddr returns address the campaign is active at
-    function deployCampaign(
+    function deploy(
         bytes memory _campaign_data
     ) external onlyDeployer returns (address campAddr) {
         assembly {
