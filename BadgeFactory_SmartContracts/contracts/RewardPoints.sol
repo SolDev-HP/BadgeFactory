@@ -55,7 +55,14 @@ contract RewardPoints {
 
     // This can be done by customer themselves, but for now we keep
     // access control with console so everything can be done from
-    // console
+    // console --
+    // @todo - customer can be wallet address or phone number or email address or a QR code (wallet mixed with coupon/badge)
+    // Instead of storing customer details on here, store it on local ipfs node
+    // This hash can be used as a customer identifier.
+    // This is hash similar to Campaign struct hash, but the difference is that it's not public
+    // This can be handled by business/brands on their own or can use default provided by badgefactory backend
+    // For CampaignDetails struct, (future: Badges images/gifs(media), tickets media, Codes media) can be -
+    // on public ipfs, they are for UI and doesn't contain actual operational data
     function subscribe_customer(address customer) external onlyConsole {
         require(!_is_cust_subscribed[customer], "AlreadySubbed!");
         // Assign custid->address

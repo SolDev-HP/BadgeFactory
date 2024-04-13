@@ -8,30 +8,41 @@ import "./Badges.sol";
 import "./Tickets.sol";
 import "./Codes.sol";
 
+// Campaign types are:
+// 1 - Reward Points
+// 2 - Badges
+// 3 - Tickets
+// 4 - Codes
 contract LoyaltyConsole {
-    // Home Address
-    address private _factory;
-    address private _campaigns_deployer;
     // Total campaigns deployed vs total running
-    uint private _total_campaigns;
+    // Useful for UI interactions
+    uint public _total_campaigns;
     uint private _total_points_campaigns;
     uint private _total_badges_campaigns;
     uint private _total_tickets_campaigns;
     uint private _total_codes_campaigns;
+    // Home Address
+    address private _factory;
+    address private _campaigns_deployer;
     // LoyaltyConsole:
     // Entity: deploy new campaigns, register new users, modify campaigns, remove campaigns
     // Customer: participate or register with entity
 
     // Campaign type and details
-    struct Campaign {
-        uint256 _campaign_id;
-        uint256 _campaign_type;
-        string _campaign_name;
-        string _campaign_details;
-        address _campaign_deployed_at;
-        bool _campaign_active;
-    }
-    mapping(address => Campaign) public _address_to_campaign_details;
+    // Campaign can also have campaignCreationTimestamp -
+    // campaign expiry in campaignExpiryTimestamp/campaignEndTimestamp
+    // Can we move this storage to ipfs? that way we only use one variable (bytes) of ipfs datahash
+    // struct Campaign {
+    //     uint256 _campaign_id;
+    //     uint256 _campaign_type;
+    //     bytes32 _campaign_name; // 32 lettes name
+    //     bytes32 _campaign_details; // 32 letters details (Can change later)
+    //     address _campaign_deployed_at;
+    //     bool _campaign_active;
+    // }
+    // Using one var instead
+    bytes public campaign_details_hash;
+    mapping(address => bytes) public _address_to_campaign_details_hash;
 
     // Role mapper
     // @todo: verify msg.sender vs tx.origin
@@ -44,7 +55,9 @@ contract LoyaltyConsole {
         // Whoever originated the tx, not the creation happened by badgefactory
         // because msg.sender will be badgefactory always
         _factory = factory_address;
-        assert(_factory == msg.sender); // Interesting check, need to see if it works
+        require(_factory == msg.sender, "OnlyFactory!"); // Interesting check, need to see if it works
+        // Msg.sender here will always be factory
+        // tx.origin should be business/brand that is interacting with BadgeFactory.sol
         _is_address_Entity[tx.origin] = true;
     }
 
@@ -74,19 +87,18 @@ contract LoyaltyConsole {
 
     // Deploying campaigns through console
     function start_campaign(
-        uint _campaign_type,
-        string memory camp_name,
-        string memory camp_details
+        uint p_campaign_type,
+        bytes memory p_campaign_details_hash
     ) public roleEntity returns (address _campaign_addr) {
         // Assumed
-        require((0 < _campaign_type) && (_campaign_type < 5), "1to4Only!");
+        require((0 < p_campaign_type) && (p_campaign_type < 5), "1to4Only!");
         require(address(_campaigns_deployer) != address(0), "DeployerNeeded!");
         // This is where campaign bytecode will reside
         bytes memory campaign_code;
 
         // _campaign_id for RewardPoints(1), Badges(2), Tickets(3), Codes(4)
         // Probably needs more data along with each type, changes as we go
-        if (_campaign_type == 1) {
+        if (p_campaign_type == 1) {
             campaign_code = abi.encodePacked(
                 type(RewardPoints).creationCode,
                 abi.encode(address(this))
@@ -96,7 +108,7 @@ contract LoyaltyConsole {
             );
             // Reward points campaigns increased
             _total_points_campaigns += 1;
-        } else if (_campaign_type == 2) {
+        } else if (p_campaign_type == 2) {
             campaign_code = abi.encodePacked(
                 type(Badges).creationCode,
                 abi.encode(address(this))
@@ -106,7 +118,7 @@ contract LoyaltyConsole {
             );
             // Badges campaigns increased
             _total_badges_campaigns += 1;
-        } else if (_campaign_type == 3) {
+        } else if (p_campaign_type == 3) {
             campaign_code = abi.encodePacked(
                 type(Tickets).creationCode,
                 abi.encode(address(this))
@@ -116,7 +128,7 @@ contract LoyaltyConsole {
             );
             // Total tickets
             _total_tickets_campaigns += 1;
-        } else if (_campaign_type == 4) {
+        } else if (p_campaign_type == 4) {
             campaign_code = abi.encodePacked(
                 type(Codes).creationCode,
                 abi.encode(address(this))
@@ -133,18 +145,22 @@ contract LoyaltyConsole {
         // Increase total
         _total_campaigns += 1;
         // Add to list of deployed
-        _campaign_type_to_list_of_deployed[_campaign_type].push(
+        _campaign_type_to_list_of_deployed[p_campaign_type].push(
             address(_campaign_addr)
         );
         // Insert into deployed campaign details
-        _address_to_campaign_details[address(_campaign_addr)] = Campaign({
-            _campaign_id: _total_campaigns - 1,
-            _campaign_type: _campaign_type,
-            _campaign_name: camp_name,
-            _campaign_details: camp_details,
-            _campaign_deployed_at: address(_campaign_addr),
-            _campaign_active: true
-        });
+        // It now stores hash of ipfs where we store Campaign structure
+        _address_to_campaign_details_hash[
+            address(_campaign_addr)
+        ] = p_campaign_details_hash;
+        // _address_to_campaign_details_hash[address(_campaign_addr)] = Campaign({
+        //     _campaign_id: _total_campaigns - 1,
+        //     _campaign_type: _campaign_type,
+        //     _campaign_name: camp_name,
+        //     _campaign_details: camp_details,
+        //     _campaign_deployed_at: address(_campaign_addr),
+        //     _campaign_active: true
+        // });
     }
 
     // Coming from BadgeFactory.sol - keep if needed

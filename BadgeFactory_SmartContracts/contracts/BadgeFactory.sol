@@ -7,6 +7,9 @@ import "./interfaces/IDeployer.sol";
 import "./interfaces/ILoyaltyConsole.sol";
 import "./Deployer.sol";
 
+// For debugging only
+import "hardhat/console.sol";
+
 /// @title BadgeFactory Deployer smart contract
 /// @author SolDev-HP
 /// @notice This is the main BadgeFactory contract, that will be connected to frontend, -
@@ -113,27 +116,22 @@ contract BadgeFactory {
     function deploy_console()
         public
         registeredUsersOnly
-        returns (LoyaltyConsole _console_addr)
+        returns (address _console_addr)
     {
+        LoyaltyConsole _console;
         // Deploy Console
-        _console_addr = new LoyaltyConsole(address(this));
+        _console = new LoyaltyConsole(address(this));
         // Assert console address though, we need console to be deployed
-        assert(address(_console_addr) != address(0));
-        emit ConsoleCreated(address(_console_addr));
+        _console_addr = address(_console);
+        assert(_console_addr != address(0));
+        emit ConsoleCreated(_console_addr);
         // Setup deployer in loyaltyConsole
-        ILoyaltyConsole(address(_console_addr)).set_campaign_deployer(
-            _deployer_address
-        );
+        ILoyaltyConsole(_console_addr).set_campaign_deployer(_deployer_address);
         // Setup deployer to accept this console as accessor
-        IDeployer(_deployer_address).change_accessor(
-            address(_console_addr),
-            true
-        );
+        IDeployer(_deployer_address).change_accessor(_console_addr, true);
 
         // Update total consoles list for the sender
-        _address_deployed_loyaltyConsoles_list[msg.sender].push(
-            address(_console_addr)
-        );
+        _address_deployed_loyaltyConsoles_list[msg.sender].push(_console_addr);
     }
 
     // Check deployer address, only for owner

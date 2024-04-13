@@ -32,6 +32,8 @@ describe("BadgeFactory", function () {
             cust2,
             cust3,
         };
+        // Check IPFS active
+        
     }
 
     it("BadgeFactory is deployed, Anyone can register themselves", async function () {
@@ -73,5 +75,16 @@ describe("BadgeFactory", function () {
         } = await loadFixture(deployBadgeFactoryFixture);
 
         // Loyalty console related checks
+        // It now requires us to upload following structure to ipfs -
+        //  and pass that hash to start_campaign call -
+        //  the function now requires (Campaign_Type, Campaign_Strct_Stored_at_ipfs_hash)
+        // struct Campaign {
+        //     uint256 _campaign_id;                // ID [TotalCampaignsDeployed+1] don't have this?
+        //     bytes32 _campaign_name;              // 32 lettes name
+        //     bytes32 _campaign_details;           // 32 letters details (Can change later)
+        //     uint256 _campaign_type;              // campaign_type [1, 2, 3, 4]
+        //     /*address _campaign_deployed_at;*/   // We have this in another var on loyaltyconsole
+        //     bool _campaign_active;               // Set later?
+        // }
     });
 });
