@@ -26,9 +26,21 @@ contract Badges {
     // Customers can
     // Claim their badges
     // transfer badges to friends, family
-    constructor(address camp_owner, bytes memory camp_details_hash) {
+    constructor() {
+        // campaign_owner = camp_owner;
+        // We do this separately after construction happens
+    }
+
+    function set_campaign_owner(address camp_owner) external {
+        // setup console as the owner so interactions can happen for that deployed campaign
         campaign_owner = camp_owner;
-        campaign_details_hash = camp_details_hash;
+    }
+
+    // Allow setting campaign details
+    function set_campaign_details(
+        bytes memory camp_details
+    ) external onlyConsole {
+        campaign_details_hash = camp_details;
     }
 
     // basic getter for campaign details hash

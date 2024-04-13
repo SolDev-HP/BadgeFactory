@@ -15,9 +15,48 @@ describe("LoyaltyConsole", function () {
         const [factoryOwner, brand1, brand2, cust1, cust2] =
             await ethers.getSigners();
 
+        // Setup campaign implementations
+        const rewardpointFactory = await ethers.getContractFactory(
+            "RewardPoints"
+        );
+        const rewardpoints_campImpl = await rewardpointFactory.deploy();
+        rewardpoints_campImpl.waitForDeployment();
+
+        const badgesFactory = await ethers.getContractFactory("Badges");
+        const badges_campImpl = await badgesFactory.deploy();
+        badges_campImpl.waitForDeployment();
+
+        const ticketsFactory = await ethers.getContractFactory("Tickets");
+        const tickets_campImpl = await ticketsFactory.deploy();
+        tickets_campImpl.waitForDeployment();
+
+        const codesFactory = await ethers.getContractFactory("Codes");
+        const codes_campImpl = await codesFactory.deploy();
+        codes_campImpl.waitForDeployment();
+
         // Prepare badgefactory
         const badgefactory = await ethers.deployContract("BadgeFactory");
         await badgefactory.waitForDeployment();
+
+        // Four tx of setting campaign implementations for badgefactory
+        // could've set constructor so that it accepts all this data, but I'll keep that for refactor @todo
+        const tx1 = await badgefactory.set_campaign_implementation(
+            1,
+            await rewardpoints_campImpl.getAddress()
+        );
+        const tx2 = await badgefactory.set_campaign_implementation(
+            2,
+            await badges_campImpl.getAddress()
+        );
+        const tx3 = await badgefactory.set_campaign_implementation(
+            3,
+            await tickets_campImpl.getAddress()
+        );
+        const tx4 = await badgefactory.set_campaign_implementation(
+            4,
+            await codes_campImpl.getAddress()
+        );
+
         // BadgeFactory & Deployer deployed here
         // console.log(
         //     `BadgeFactory Deployed At: ${await badgefactory.getAddress()}`
@@ -34,7 +73,7 @@ describe("LoyaltyConsole", function () {
         // );
         const loyaltyconsole_tx = await badgefactory
             .connect(brand1)
-            .deploy_console();
+            .deploy_console([1]); // Deploy console with only rewardpoints campaign supported
         await loyaltyconsole_tx.wait(1); // Let it deploy then we have the address of that campaign
         const brandaddress = await brand1.getAddress();
         const loyaltyConsoleAddress =
@@ -51,8 +90,12 @@ describe("LoyaltyConsole", function () {
 
         return {
             badgefactory,
-            factoryOwner,
+            rewardpoints_campImpl,
+            badges_campImpl,
+            tickets_campImpl,
+            codes_campImpl,
             loyaltyConsoleAddress,
+            factoryOwner,
             brand1,
             brand2,
             cust1,
@@ -65,9 +108,13 @@ describe("LoyaltyConsole", function () {
         // Load fixture here
         //-----------------
         const {
-            badgefactory_addr,
-            factoryOwner,
+            badgefactory,
+            rewardpoints_campImpl,
+            badges_campImpl,
+            tickets_campImpl,
+            codes_campImpl,
             loyaltyConsoleAddress,
+            factoryOwner,
             brand1,
             brand2,
             cust1,
@@ -89,9 +136,13 @@ describe("LoyaltyConsole", function () {
     it("Should allow deployment of new campaign, store campaign details on ipfs, validate storage", async function () {
         // Prepare fixture
         const {
-            badgefactory_addr,
-            factoryOwner,
+            badgefactory,
+            rewardpoints_campImpl,
+            badges_campImpl,
+            tickets_campImpl,
+            codes_campImpl,
             loyaltyConsoleAddress,
+            factoryOwner,
             brand1,
             brand2,
             cust1,

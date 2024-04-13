@@ -17,8 +17,49 @@ describe("BadgeFactory", function () {
             await ethers.getSigners();
 
         // Prepare badgefactory
+        // Now we need to deploy Campaigns [RewardPoints, Badges, Tickets, Codes] seperately
+        // and then set their implementation addresses in badgefactory
+        // No owner zone, clone will use their own state variables so we are just using implementation
+        const rewardpointFactory = await ethers.getContractFactory(
+            "RewardPoints"
+        );
+        const rewardpoints_campImpl = await rewardpointFactory.deploy();
+        rewardpoints_campImpl.waitForDeployment();
+
+        const badgesFactory = await ethers.getContractFactory("Badges");
+        const badges_campImpl = await badgesFactory.deploy();
+        badges_campImpl.waitForDeployment();
+
+        const ticketsFactory = await ethers.getContractFactory("Tickets");
+        const tickets_campImpl = await ticketsFactory.deploy();
+        tickets_campImpl.waitForDeployment();
+
+        const codesFactory = await ethers.getContractFactory("Codes");
+        const codes_campImpl = await codesFactory.deploy();
+        codes_campImpl.waitForDeployment();
+
         const badgefactory = await ethers.getContractFactory("BadgeFactory");
         const badgefactory_addr = await badgefactory.deploy();
+        badgefactory_addr.waitForDeployment();
+
+        // Four tx of setting campaign implementations for badgefactory
+        // could've set constructor so that it accepts all this data, but I'll keep that for refactor @todo
+        const tx1 = await badgefactory_addr.set_campaign_implementation(
+            1,
+            await rewardpoints_campImpl.getAddress()
+        );
+        const tx2 = await badgefactory_addr.set_campaign_implementation(
+            2,
+            await badges_campImpl.getAddress()
+        );
+        const tx3 = await badgefactory_addr.set_campaign_implementation(
+            3,
+            await tickets_campImpl.getAddress()
+        );
+        const tx4 = await badgefactory_addr.set_campaign_implementation(
+            4,
+            await codes_campImpl.getAddress()
+        );
         // BadgeFactory & Deployer deployed here
         // console.log(
         //     `BadgeFactory Deployed At: ${await badgefactory_addr.getAddress()}`
@@ -26,6 +67,10 @@ describe("BadgeFactory", function () {
 
         return {
             badgefactory_addr,
+            rewardpoints_campImpl,
+            badges_campImpl,
+            tickets_campImpl,
+            codes_campImpl,
             factoryOwner,
             brand1,
             brand2,
@@ -41,6 +86,10 @@ describe("BadgeFactory", function () {
         //-----------------
         const {
             badgefactory_addr,
+            rewardpoints_campImpl,
+            badges_campImpl,
+            tickets_campImpl,
+            codes_campImpl,
             factoryOwner,
             brand1,
             brand2,

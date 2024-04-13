@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
+import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IDeployer.sol";
+import "./interfaces/ICampaign.sol";
 import "./interfaces/IRewardPoints.sol";
 // for type(campaign).creationCode
-import "./RewardPoints.sol";
-import "./Badges.sol";
-import "./Tickets.sol";
-import "./Codes.sol";
+import "./interfaces/IBadges.sol";
+import "./interfaces/ITickets.sol";
+import "./interfaces/ICodes.sol";
 
 // Campaign types are:
 // 1 - Reward Points
@@ -20,6 +21,7 @@ contract LoyaltyConsole {
     // These can be moved to private or offchain, we can keep track of each with event emitted
     // @todo check if it actually saves gas and storage space
     uint256 public _total_campaigns;
+    uint256 public total_supported_campaigns;
     uint256 public _total_points_campaigns;
     uint256 public _total_badges_campaigns;
     uint256 public _total_tickets_campaigns;
@@ -27,6 +29,17 @@ contract LoyaltyConsole {
     // Home Address
     address private _factory;
     address private _campaigns_deployer;
+
+    // Supported campaigns - and where their clones are (Address)
+    enum Campaign_Types {
+        REWARD_POINTS,
+        BADGES,
+        TICKETS,
+        CODES
+    }
+    Campaign_Types camp_type_choice;
+    mapping(uint256 => address) private campaign_type_to_implementation;
+
     // LoyaltyConsole:
     // Entity: deploy new campaigns, register new users, modify campaigns, remove campaigns
     // Customer: participate or register with entity
@@ -53,7 +66,13 @@ contract LoyaltyConsole {
     mapping(uint256 => address[]) private _campaign_type_to_list_of_deployed;
 
     // ------------- Constructor
-    constructor(address factory_address) {
+    // Deploy with list of deployable + supported campaigns for this console
+    // i.e. customizable console
+    constructor(
+        address factory_address,
+        uint256[] memory supported_types,
+        address[] memory types_implementations
+    ) {
         // Whoever originated the tx, not the creation happened by badgefactory
         // because msg.sender will be badgefactory always
         _factory = factory_address;
@@ -61,6 +80,12 @@ contract LoyaltyConsole {
         // Msg.sender here will always be factory
         // tx.origin should be business/brand that is interacting with BadgeFactory.sol
         _is_address_Entity[tx.origin] = true;
+        for (uint256 i = 0; i < supported_types.length; i++) {
+            campaign_type_to_implementation[
+                supported_types[i]
+            ] = types_implementations[i];
+            total_supported_campaigns += 1;
+        }
     }
 
     // ------------- Modifiers
@@ -95,52 +120,41 @@ contract LoyaltyConsole {
         // Assumed
         require((0 < p_campaign_type) && (p_campaign_type < 5), "1to4Only!");
         require(address(_campaigns_deployer) != address(0), "DeployerNeeded!");
-        // This is where campaign bytecode will reside
-        bytes memory campaign_code;
 
+        // Do we have requested campaign implementation available?
+        require(
+            campaign_type_to_implementation[p_campaign_type] != address(0x0),
+            "CampNotSupported"
+        );
+
+        // Clone required campaign type
+        _campaign_addr = Clones.clone(
+            campaign_type_to_implementation[p_campaign_type]
+        );
+        ICampaign(_campaign_addr).set_campaign_owner(address(this));
         // _campaign_id for RewardPoints(1), Badges(2), Tickets(3), Codes(4)
         // Probably needs more data along with each type, changes as we go
         if (p_campaign_type == 1) {
-            campaign_code = abi.encodePacked(
-                type(RewardPoints).creationCode,
-                abi.encode(address(this)),
-                abi.encode(p_campaign_details_hash)
-            );
-            _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
-                campaign_code
+            IRewardPoints(_campaign_addr).set_campaign_details(
+                p_campaign_details_hash
             );
             // Reward points campaigns increased
             _total_points_campaigns += 1;
         } else if (p_campaign_type == 2) {
-            campaign_code = abi.encodePacked(
-                type(Badges).creationCode,
-                abi.encode(address(this)),
-                abi.encode(p_campaign_details_hash)
-            );
-            _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
-                campaign_code
+            IBadges(_campaign_addr).set_campaign_details(
+                p_campaign_details_hash
             );
             // Badges campaigns increased
             _total_badges_campaigns += 1;
         } else if (p_campaign_type == 3) {
-            campaign_code = abi.encodePacked(
-                type(Tickets).creationCode,
-                abi.encode(address(this)),
-                abi.encode(p_campaign_details_hash)
-            );
-            _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
-                campaign_code
+            ITickets(_campaign_addr).set_campaign_details(
+                p_campaign_details_hash
             );
             // Total tickets
             _total_tickets_campaigns += 1;
         } else if (p_campaign_type == 4) {
-            campaign_code = abi.encodePacked(
-                type(Codes).creationCode,
-                abi.encode(address(this)),
-                abi.encode(p_campaign_details_hash)
-            );
-            _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
-                campaign_code
+            ICodes(_campaign_addr).set_campaign_details(
+                p_campaign_details_hash
             );
             // Total codes
             _total_codes_campaigns += 1;

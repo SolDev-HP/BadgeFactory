@@ -60,9 +60,24 @@ contract RewardPoints {
     // Customers can
     // redeem reward points
     // transfer reward points to friends, family
-    constructor(address camp_owner, bytes memory camp_hash) {
+    constructor() {
+        //campaign_owner_console = camp_owner;
+        // This will be cloned onto loyaltyConsole whenever required
+        // Deploy once but cloned as many times as required
+    }
+
+    // Set campaign owner is also a functionality now, as construction is nothing but a rewards campaign
+    function set_campaign_owner(address camp_owner) external {
+        // setup console as the owner so interactions can happen for that deployed campaign
         campaign_owner_console = camp_owner;
-        campaign_details_hash = camp_hash;
+    }
+
+    // Set campaign hash details
+    function set_campaign_details(
+        bytes memory camp_details
+    ) external onlyConsole {
+        campaign_details_hash = camp_details;
+        // emit that details have been changed
     }
 
     // A simple public function to get details (metadata) of this campaign

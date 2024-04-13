@@ -49,6 +49,9 @@ contract BadgeFactory {
     mapping(address => bool) private _address_is_Customer;
     //mapping(address => uint8) private _user_role;
 
+    // To keep track of campaign implementations to use
+    mapping(uint256 => address) private _campaign_type_to_implementation;
+
     // Using events for mapping flow, may or may not use in prod
     event ConsoleCreated(address _consoleAddr);
     event DeployerAt(address _campDeployer);
@@ -116,14 +119,30 @@ contract BadgeFactory {
     // Registered Users Only functionality
     // Deploy a Loyalty Management system
     // Deploys LoyaltyConsole.sol contract and returns the added it's deployed at
-    function deploy_console()
-        public
-        registeredUsersOnly
-        returns (address _console_addr)
-    {
+    function deploy_console(
+        uint256[] memory support_these_types
+    ) public registeredUsersOnly returns (address _console_addr) {
         LoyaltyConsole _console;
+        // supported campaign types and their implementations
+        address[] memory camp_impls = new address[](support_these_types.length);
+        // Make sure we have given campaign_type implementation ready
+        for (uint256 i = 0; i < support_these_types.length; i++) {
+            require(
+                _campaign_type_to_implementation[support_these_types[i]] !=
+                    address(0x0),
+                "ImplNotPresent"
+            );
+            camp_impls[i] = _campaign_type_to_implementation[
+                support_these_types[i]
+            ];
+        }
         // Deploy Console
-        _console = new LoyaltyConsole(address(this));
+        // Pass it along with support_these_type_ requested
+        _console = new LoyaltyConsole(
+            address(this),
+            support_these_types,
+            camp_impls
+        );
         // Assert console address though, we need console to be deployed
         _console_addr = address(_console);
         assert(_console_addr != address(0));
@@ -135,6 +154,14 @@ contract BadgeFactory {
 
         // Update total consoles list for the sender
         _address_deployed_loyaltyConsoles_list[msg.sender].push(_console_addr);
+    }
+
+    // Campaign implementation setup
+    function set_campaign_implementation(
+        uint256 campaign_type,
+        address implementation
+    ) public onlyFactoryOwner {
+        _campaign_type_to_implementation[campaign_type] = implementation;
     }
 
     // Check deployer address, only for owner
