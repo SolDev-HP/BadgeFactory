@@ -243,7 +243,34 @@ describe("LoyaltyConsole", function () {
         const totalPointsCampNow =
             await consoleContract._total_points_campaigns();
         expect(Number(totalPointsCampNow)).to.equal(1);
+
+        // IT wont let it start other types though (badges, tickets, codes)
+        await expect(
+            consoleContract
+                .connect(brand1)
+                .start_campaign(
+                    2,
+                    new TextEncoder().encode(hash_of_campaignDetails)
+                )
+        ).to.be.revertedWith("CampNotSupported");
+        await expect(
+            consoleContract
+                .connect(brand1)
+                .start_campaign(
+                    3,
+                    new TextEncoder().encode(hash_of_campaignDetails)
+                )
+        ).to.be.revertedWith("CampNotSupported");
+        await expect(
+            consoleContract
+                .connect(brand1)
+                .start_campaign(
+                    4,
+                    new TextEncoder().encode(hash_of_campaignDetails)
+                )
+        ).to.be.revertedWith("CampNotSupported");
     });
+
     // Next tests
     // interact_rewardpoints - subscribe a customer to a campaign
     //      customer_details - [phone number, email, qrcode(todo), address]

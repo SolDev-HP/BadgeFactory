@@ -1,11 +1,16 @@
 ## BadgeFactory - Smart Contracts
 
 This is smart contracts folder for BadgeFactory product.
-@todo token standard usage when I add openzeppelin clone minimal proxy, so that we can deploy
-campaign implementations once, and then clone in loyaltyconsole and customize with initialize call. More custmizations support, reduce size of loyaltyconsole smart contract
+Supports deploying campaigns such as RewardPoints, Badges, Tickets, Codes, and more to be added as I go.
+These campaigns are smart contracts with base of ICampaign (@todo yet to migrate to this one but on the way) and other extention addition based on user selection (like erc20, erc721, erc1155, and more).
+(For example, if we wanted to deploy reward points as erc20 with customizations such as expiry and bonus at certain milestones, many such customizations as CampaignDetails struct)
 
 This will include all MorphL2 smart contracts for following things:
 
+- Basic Reward Points // I am almost done with this. :D
+- Basic Badges (ERC721 soulbound)
+- Basic Tickets (ERC721 soulbound/transferable/expirable)
+- Basic Codes (ERC721 soulbound/transferable/expirable)
 - Reward Points (ERC20 + Extended for badgefactory)
 - Loyalty Badges (ERC721 + Extended)
 - Event Tickets (ERC721 + Extended)
@@ -26,9 +31,9 @@ Following operations will happen on IPFS
 
 -- @todo task list
 
-- Move role management to OpenZeppelin accesscontrol lib
-- Change custom factory pattern to officially available ones
-- Change start_campaign to utilize Clones minimal proxy, use preexisting implementation of campaigns | This requires initialize() function that changes campaign as desired
+- [ ] Move role management to OpenZeppelin accesscontrol lib
+- [ ] Change custom factory pattern improvement
+- [x] Change start_campaign to utilize Clones minimal proxy, use preexisting implementation of campaigns | This requires initialize() function that changes campaign as desired (I am now using OpenZeppelin EIP 1167 clones)
 
 #### dev notes:
 
