@@ -37,8 +37,9 @@ contract BadgeFactory {
     // List of all available LoyaltyConsoles addresses
     // with their deployer? @todo: check
     // Register: Entity or Customer
-    mapping(address => address[])
-        private _address_deployed_loyaltyConsoles_list;
+    // (address => address[]) implies that we allow multiple consoles to be deployed
+    mapping(address => address[]) public _address_deployed_loyaltyConsoles_list;
+    // If we need totalConsoles deployed counting @todo
     // Badgefactory registery, role assignment
     // _has_registered can be checked easily with assigned role,
     // role inquiry will happen anyway when we execute modifiers

@@ -15,34 +15,43 @@ describe("LoyaltyConsole", function () {
             await ethers.getSigners();
 
         // Prepare badgefactory
-        const badgefactory = await ethers.getContractFactory("BadgeFactory");
-        const badgefactory_addr = await badgefactory.deploy();
+        const badgefactory = await ethers.deployContract("BadgeFactory");
+        await badgefactory.waitForDeployment();
         // BadgeFactory & Deployer deployed here
         console.log(
-            `BadgeFactory Deployed At: ${await badgefactory_addr.getAddress()}`
+            `BadgeFactory Deployed At: ${await badgefactory.getAddress()}`
         );
+        console.log(`Owner is: ${await factoryOwner.getAddress()}`);
 
         // Be a brand a try to deploy
         // Register as a brand
-        await badgefactory_addr.connect(brand1).register(1);
+        await badgefactory.connect(brand1).register(1);
 
         // Deploy a loyaltyconsole
-        const loyaltyconsole = await ethers.getContractFactory(
-            "LoyaltyConsole"
-        );
-        let loyaltyconsole_addr = await badgefactory_addr
+        // const loyaltyconsole = await ethers.getContractFactory(
+        //     "LoyaltyConsole"
+        // );
+        const loyaltyconsole_tx = await badgefactory
             .connect(brand1)
             .deploy_console();
-        await loyaltyconsole_addr.wait(1);
+        await loyaltyconsole_tx.wait(1); // Let it deploy then we have the address of that campaign
+        const brandaddress = await brand1.getAddress();
+        const getAddress =
+            await badgefactory._address_deployed_loyaltyConsoles_list(
+                brandaddress,
+                0 // Address, uint as it's a mapping to a list, we need to provide what's max
+            );
+
+        console.log(`LoyaltyConsole deployed at: ${getAddress}`);
         //const loyaltyconsole_contract = loyaltyconsole.attach();
-        console.log(
-            `LoyaltyConsole deployed at: ${JSON.stringify(loyaltyconsole_addr)}`
-        );
+        // console.log(
+        //     `LoyaltyConsole deployed at: ${JSON.stringify(loyaltyconsole_addr)}`
+        // );
 
         return {
-            badgefactory_addr,
+            badgefactory,
             factoryOwner,
-            loyaltyconsole,
+            getAddress,
             brand1,
             brand2,
             cust1,
