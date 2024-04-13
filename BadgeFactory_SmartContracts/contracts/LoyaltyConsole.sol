@@ -44,7 +44,7 @@ contract LoyaltyConsole {
     //     bool _campaign_active;
     // }
     // Using one var instead
-    mapping(address => bytes) public _address_to_campaign_details_hash;
+    // mapping(address => bytes) public _address_to_campaign_details_hash;
 
     // Role mapper
     // @todo: verify msg.sender vs tx.origin
@@ -103,7 +103,8 @@ contract LoyaltyConsole {
         if (p_campaign_type == 1) {
             campaign_code = abi.encodePacked(
                 type(RewardPoints).creationCode,
-                abi.encode(address(this))
+                abi.encode(address(this)),
+                abi.encode(p_campaign_details_hash)
             );
             _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
                 campaign_code
@@ -113,7 +114,8 @@ contract LoyaltyConsole {
         } else if (p_campaign_type == 2) {
             campaign_code = abi.encodePacked(
                 type(Badges).creationCode,
-                abi.encode(address(this))
+                abi.encode(address(this)),
+                abi.encode(p_campaign_details_hash)
             );
             _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
                 campaign_code
@@ -123,7 +125,8 @@ contract LoyaltyConsole {
         } else if (p_campaign_type == 3) {
             campaign_code = abi.encodePacked(
                 type(Tickets).creationCode,
-                abi.encode(address(this))
+                abi.encode(address(this)),
+                abi.encode(p_campaign_details_hash)
             );
             _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
                 campaign_code
@@ -133,7 +136,8 @@ contract LoyaltyConsole {
         } else if (p_campaign_type == 4) {
             campaign_code = abi.encodePacked(
                 type(Codes).creationCode,
-                abi.encode(address(this))
+                abi.encode(address(this)),
+                abi.encode(p_campaign_details_hash)
             );
             _campaign_addr = IDeployer(_campaigns_deployer).deploy_campaign(
                 campaign_code
@@ -152,9 +156,10 @@ contract LoyaltyConsole {
         );
         // Insert into deployed campaign details
         // It now stores hash of ipfs where we store Campaign structure
-        _address_to_campaign_details_hash[
-            address(_campaign_addr)
-        ] = p_campaign_details_hash;
+        // now we don't need it actually
+        // _address_to_campaign_details_hash[
+        //     address(_campaign_addr)
+        // ] = p_campaign_details_hash;
         // _address_to_campaign_details_hash[address(_campaign_addr)] = Campaign({
         //     _campaign_id: _total_campaigns - 1,
         //     _campaign_type: _campaign_type,

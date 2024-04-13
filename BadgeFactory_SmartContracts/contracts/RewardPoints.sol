@@ -8,11 +8,22 @@ pragma solidity 0.8.20;
 /// @notice This contract is responsible for handling reward points redeem/claim and user subscription
 /// @dev This is a campaign, it will be deployed by campaigndeployer and
 /// the owner will be assigned to msg.sender
+
+/// This is going to get more customized, once I implement the base Campaign contract,
+///    - There are some basic functionality shared by all Campaigns (ICampaign.sol interface)
+///    - Some common state variables like owner_Console, campaign_details_hash
+///    -- change in campaign_details_hash will move to another var,
+/// _cust_id_to_cust_address is internal custid related to this campaign only,
+/// _is_cust_subscribed - will move to parent contract, it's crucial component for any campaign to make sure -
+///    customer is subscribed because there are certain functions that can be done by customers and for that -
+///    we need to have this modifier for basic check
 contract RewardPoints {
     // ------------- State Vars
     address public campaign_owner_console;
     uint256 private _total_points;
     uint256 private _total_customers_counter;
+    // Contains IPFS hash of this campaign's details
+    bytes public campaign_details_hash;
 
     mapping(uint256 => address) private _cust_id_to_cust_address;
     mapping(address => bool) private _is_cust_subscribed;
@@ -49,8 +60,18 @@ contract RewardPoints {
     // Customers can
     // redeem reward points
     // transfer reward points to friends, family
-    constructor(address camp_owner) {
+    constructor(address camp_owner, bytes memory camp_hash) {
         campaign_owner_console = camp_owner;
+        campaign_details_hash = camp_hash;
+    }
+
+    // A simple public function to get details (metadata) of this campaign
+    function get_campaign_details()
+        public
+        view
+        returns (bytes memory details_hash)
+    {
+        details_hash = campaign_details_hash;
     }
 
     // This can be done by customer themselves, but for now we keep

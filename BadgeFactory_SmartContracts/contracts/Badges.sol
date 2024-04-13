@@ -6,6 +6,7 @@ pragma solidity 0.8.20;
 contract Badges {
     // ------------- State Vars
     address public campaign_owner;
+    bytes public campaign_details_hash;
 
     // ------------- Modifier
     modifier onlyConsole() {
@@ -25,8 +26,18 @@ contract Badges {
     // Customers can
     // Claim their badges
     // transfer badges to friends, family
-    constructor(address camp_owner) {
+    constructor(address camp_owner, bytes memory camp_details_hash) {
         campaign_owner = camp_owner;
+        campaign_details_hash = camp_details_hash;
+    }
+
+    // basic getter for campaign details hash
+    function get_campaign_details()
+        public
+        view
+        returns (bytes memory camp_details_hash)
+    {
+        camp_details_hash = campaign_details_hash;
     }
 
     function check_badges() external view onlyConsole returns (uint) {
