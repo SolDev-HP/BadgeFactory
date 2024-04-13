@@ -1,4 +1,4 @@
-BadgeFactory - Smart Contracts
+## BadgeFactory - Smart Contracts
 
 This is smart contracts folder for BadgeFactory product.
 This will include all MorphL2 smart contracts for following things:
@@ -27,7 +27,7 @@ Following operations will happen on IPFS
 - Change custom factory pattern to officially available ones
 - Change start_campaign to utilize Clones minimal proxy, use preexisting implementation of campaigns | This requires initialize() function that changes campaign as desired
 
-dev notes:
+#### dev notes:
 
 File - LoyaltyConsole.sol on what Campaign struct contains right now and what is can contain in further developments
 
@@ -64,7 +64,7 @@ further on Campaign struct
 
 ```
 
-about using ipfs:
+#### about using ipfs:
 
 - for demonstration purposes, I can setup a local IPFS Kubo client that's not connected to the IPFS netwerk
   references from ipfs docs
