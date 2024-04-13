@@ -8,7 +8,7 @@ import "./interfaces/ILoyaltyConsole.sol";
 import "./Deployer.sol";
 
 // For debugging only
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 /// @title BadgeFactory Deployer smart contract
 /// @author SolDev-HP

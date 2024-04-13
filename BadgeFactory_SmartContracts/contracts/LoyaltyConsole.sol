@@ -16,11 +16,12 @@ import "./Codes.sol";
 contract LoyaltyConsole {
     // Total campaigns deployed vs total running
     // Useful for UI interactions
-    uint public _total_campaigns;
-    uint private _total_points_campaigns;
-    uint private _total_badges_campaigns;
-    uint private _total_tickets_campaigns;
-    uint private _total_codes_campaigns;
+    // Keeping them all public can be useful in UI/UX
+    uint256 public _total_campaigns;
+    uint256 public _total_points_campaigns;
+    uint256 public _total_badges_campaigns;
+    uint256 public _total_tickets_campaigns;
+    uint256 public _total_codes_campaigns;
     // Home Address
     address private _factory;
     address private _campaigns_deployer;
@@ -41,7 +42,6 @@ contract LoyaltyConsole {
     //     bool _campaign_active;
     // }
     // Using one var instead
-    bytes public campaign_details_hash;
     mapping(address => bytes) public _address_to_campaign_details_hash;
 
     // Role mapper

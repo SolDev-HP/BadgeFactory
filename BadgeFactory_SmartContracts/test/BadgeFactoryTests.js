@@ -1,6 +1,7 @@
 // Tests for deploying badgefactory
 // multiple consoles simultaneously deployed
 // access control on loyaltyconsole and campaigns
+// @todo : add tests related to campaign interactions after LoyaltyConsole is done
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { hardhatArguments } = require("hardhat");
@@ -19,9 +20,9 @@ describe("BadgeFactory", function () {
         const badgefactory = await ethers.getContractFactory("BadgeFactory");
         const badgefactory_addr = await badgefactory.deploy();
         // BadgeFactory & Deployer deployed here
-        console.log(
-            `BadgeFactory Deployed At: ${await badgefactory_addr.getAddress()}`
-        );
+        // console.log(
+        //     `BadgeFactory Deployed At: ${await badgefactory_addr.getAddress()}`
+        // );
 
         return {
             badgefactory_addr,
@@ -33,7 +34,6 @@ describe("BadgeFactory", function () {
             cust3,
         };
         // Check IPFS active
-        
     }
 
     it("BadgeFactory is deployed, Anyone can register themselves", async function () {
@@ -50,7 +50,8 @@ describe("BadgeFactory", function () {
         } = await loadFixture(deployBadgeFactoryFixture);
 
         // Owner of the badgefactory
-        console.log(`BadgeFactory owner: ${await factoryOwner.getAddress()}`);
+        //console.log(`BadgeFactory owner: ${await factoryOwner.getAddress()}`);
+
         // Register brand1 and brand2 as Entity
         await badgefactory_addr.connect(brand1).register(1); // Register as Entity
         await badgefactory_addr.connect(brand2).register(1);

@@ -14,6 +14,13 @@ This will use following things:
 - MarphL2 smart contracts
 - Tests and local deployments
 
+Note: LiquidityConsoleTests.js can only run if you have set IPFS_RPC
+It can be public (has to be a ["Writeable Gateway"](https://discuss.ipfs.tech/t/writeable-http-gateways/210)) or local private node (running throuogh `ipfs daemon --offline`). I am using kubo ipfs node from /BadgeFactory_Tools/Local_IPFS_Node. Use that folder and follow the README file.
+Following operations will happen on IPFS
+
+- Add file /api/v0/add // [On RPC Server ]
+- Retrieve file /ipfs/<CID> // [Get on Gateway]
+
 -- @todo task list
 
 - Move role management to OpenZeppelin accesscontrol lib

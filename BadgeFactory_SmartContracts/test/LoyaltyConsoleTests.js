@@ -19,10 +19,10 @@ describe("LoyaltyConsole", function () {
         const badgefactory = await ethers.deployContract("BadgeFactory");
         await badgefactory.waitForDeployment();
         // BadgeFactory & Deployer deployed here
-        console.log(
-            `BadgeFactory Deployed At: ${await badgefactory.getAddress()}`
-        );
-        console.log(`Owner is: ${await factoryOwner.getAddress()}`);
+        // console.log(
+        //     `BadgeFactory Deployed At: ${await badgefactory.getAddress()}`
+        // );
+        // console.log(`Owner is: ${await factoryOwner.getAddress()}`);
 
         // Be a brand a try to deploy
         // Register as a brand
@@ -43,7 +43,7 @@ describe("LoyaltyConsole", function () {
                 0 // Address, uint as it's a mapping to a list, we need to provide what's max
             );
 
-        console.log(`LoyaltyConsole deployed at: ${loyaltyConsoleAddress}`);
+        //console.log(`LoyaltyConsole deployed at: ${loyaltyConsoleAddress}`);
         //const loyaltyconsole_contract = loyaltyconsole.attach();
         // console.log(
         //     `LoyaltyConsole deployed at: ${JSON.stringify(loyaltyconsole_addr)}`
@@ -149,7 +149,7 @@ describe("LoyaltyConsole", function () {
                 return resp["data"]["Hash"];
             });
         // Hash received
-        console.log(`CampaignDetails Hash: ${hash_of_campaignDetails}`);
+        // console.log(`CampaignDetails Hash: ${hash_of_campaignDetails}`);
 
         // Now, validate hash with created campaign structure
         const campaign_from_ipfs = await axios.get(
@@ -180,6 +180,18 @@ describe("LoyaltyConsole", function () {
             );
 
         await campaign_start.wait(1);
-        console.log(campaign_start);
+        //console.log(campaign_start);
+        // Total number of campaigns should increase after this
+        const totalCampaignsNow = await consoleContract._total_campaigns();
+        expect(Number(totalCampaignsNow)).to.equal(1);
+        // And total of 1 rewards points campaign deployed as of now, validate
+        const totalPointsCampNow =
+            await consoleContract._total_points_campaigns();
+        expect(Number(totalPointsCampNow)).to.equal(1);
     });
+    // Next tests
+    // interact_rewardpoints - subscribe a customer to a campaign
+    //      customer_details - [phone number, email, qrcode(todo), address]
+    // interact_rewardpoints - Reward customer with points
+    // interact_rewardpoints - Customer redeems their points for a purchase (init at brand/business front)
 });
