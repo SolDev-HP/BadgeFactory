@@ -1,6 +1,9 @@
 ## BadgeFactory - Smart Contracts
 
 This is smart contracts folder for BadgeFactory product.
+@todo token standard usage when I add openzeppelin clone minimal proxy, so that we can deploy
+campaign implementations once, and then clone in loyaltyconsole and customize with initialize call. More custmizations support, reduce size of loyaltyconsole smart contract
+
 This will include all MorphL2 smart contracts for following things:
 
 - Reward Points (ERC20 + Extended for badgefactory)

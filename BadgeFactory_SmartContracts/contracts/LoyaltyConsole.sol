@@ -17,6 +17,8 @@ contract LoyaltyConsole {
     // Total campaigns deployed vs total running
     // Useful for UI interactions
     // Keeping them all public can be useful in UI/UX
+    // These can be moved to private or offchain, we can keep track of each with event emitted
+    // @todo check if it actually saves gas and storage space
     uint256 public _total_campaigns;
     uint256 public _total_points_campaigns;
     uint256 public _total_badges_campaigns;
@@ -172,6 +174,10 @@ contract LoyaltyConsole {
     //     // A way to identify campaign type (points, badges, tickets etc)
     // }
     // mapping(address => Campaigns[]) public campaign_deployers;
+
+    // Manually end any running campaign
+    // Implement function end_campaign(campaign_id) - set active false
+    // Implement auto end_campaign() - based on timestamp end_campaign - should update to active false (how?)
 
     function interact_rewardpoints(
         address customer,

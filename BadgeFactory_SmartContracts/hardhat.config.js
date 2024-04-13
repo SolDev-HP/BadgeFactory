@@ -7,6 +7,7 @@ module.exports = {
         // Reduce to even more stable versions
         // if we don't use any version specific things
         // @todo check after completing contracts dev
+        // Will change as we add openzeppeling token standards.
         version: "0.8.20",
         settings: {
             optimizer: {

@@ -116,6 +116,10 @@ describe("LoyaltyConsole", function () {
         //     bool _campaign_active;               // Set later?
         // }
 
+        // Next I'll add time stamps of starting and ending campaign, not all campaigns remain active forever,
+        //   Entity should be able to end campaign whenever, and should emit CampaignChanged event with relevant
+        //   information - this is only if we need to inform customer with a notification
+
         const campaignDetails = {
             _campaign_id: Number(totalCampaigns), //ethers.formatUnits(totalCampaigns),
             _campaign_name: "XtraRewards",
