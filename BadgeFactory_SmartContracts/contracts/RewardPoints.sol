@@ -69,6 +69,9 @@ contract RewardPoints {
     // Set campaign owner is also a functionality now, as construction is nothing but a rewards campaign
     function set_campaign_owner(address camp_owner) external {
         // setup console as the owner so interactions can happen for that deployed campaign
+        // happens only once
+        // @todo - this is a temp fix until I find a better one, just to make sure we dont keep it open
+        require(campaign_owner_console == address(0x0), "ShouldBeEmpty");
         campaign_owner_console = camp_owner;
     }
 

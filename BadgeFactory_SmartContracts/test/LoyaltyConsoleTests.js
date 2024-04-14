@@ -271,6 +271,141 @@ describe("LoyaltyConsole", function () {
         ).to.be.revertedWith("CampNotSupported");
     });
 
+    // It should allow deployment of only supported campaigns
+    it("Should allow deployment of only supported campaigns", async function () {
+        // Prepare fixture
+        const {
+            badgefactory,
+            rewardpoints_campImpl,
+            badges_campImpl,
+            tickets_campImpl,
+            codes_campImpl,
+            loyaltyConsoleAddress,
+            factoryOwner,
+            brand1,
+            brand2,
+            cust1,
+            cust2,
+        } = await loadFixture(deployLoyaltyConsoleFixture);
+
+        // We create this console with support for [RewardPoints, Badges, Tickets]
+        const loyaltyconsole_tx = await badgefactory
+            .connect(brand1)
+            .deploy_console([1, 2, 3]); // Deploy console with only rewardpoints campaign supported
+        await loyaltyconsole_tx.wait(1); // Let it deploy then we have the address of that campaign
+        const brandaddress = await brand1.getAddress();
+        const loyaltyConsoleAddress2 =
+            await badgefactory._address_deployed_loyaltyConsoles_list(
+                brandaddress,
+                1 // Address, uint as it's a mapping to a list, we need to provide what's max
+                // address[0] is already deployed in fixture so it's 2nd element in index
+            );
+        let consoleFactory = await ethers.getContractFactory("LoyaltyConsole");
+        const consoleContract = consoleFactory.attach(loyaltyConsoleAddress2);
+        // No. of deployed campaign should be 0 at this time
+        // Validate increase after deploying the campaign
+        let totalCampaigns = await consoleContract._total_campaigns();
+        expect(totalCampaigns).to.equal(0);
+
+        // Now we deploy it
+        const campaignDetails_RewardPoints = {
+            _campaign_id: Number(totalCampaigns), //ethers.formatUnits(totalCampaigns),
+            _campaign_name: "XtraRewards",
+            _campaign_details: "Reward points for Xtra",
+            _campaign_type: 1, // This can be bytes if we want string
+            _campaign_active: true,
+        };
+
+        const campaignDetails_Badges = {
+            _campaign_id: Number(totalCampaigns) + 1, //ethers.formatUnits(totalCampaigns),
+            _campaign_name: "XtraRewards",
+            _campaign_details: "Reward points for Xtra",
+            _campaign_type: 2, // This can be bytes if we want string
+            _campaign_active: true,
+        };
+
+        const campaignDetails_Tickets = {
+            _campaign_id: Number(totalCampaigns) + 2, //ethers.formatUnits(totalCampaigns),
+            _campaign_name: "XtraRewards",
+            _campaign_details: "Reward points for Xtra",
+            _campaign_type: 3, // This can be bytes if we want string
+            _campaign_active: true,
+        };
+
+        // create json struct of var
+        const json_rewardpoints = JSON.stringify(campaignDetails_RewardPoints);
+        const json_badges = JSON.stringify(campaignDetails_Badges);
+        const json_tickets = JSON.stringify(campaignDetails_Tickets);
+
+        const file_rewardpoints = new Blob([json_rewardpoints], {
+            type: "application/json",
+        });
+        const file_badges = new Blob([json_badges], {
+            type: "application/json",
+        });
+        const file_tickets = new Blob([json_tickets], {
+            type: "application/json",
+        });
+
+        // Now prepare all three files, so we can deploy each campaign seperately
+        // validate that Codes campaign is not supported in this loyaltyConsole
+        const inmemfile1 = new File(
+            [file_rewardpoints],
+            "campaign_details.json"
+        );
+        const inmemfile2 = new File([file_badges], "campaign_badges.json");
+        const inmemfile3 = new File([file_tickets], "campaign_tickets.json");
+
+        // Put this to ipfs and get hash
+        const ipfs_link = process.env.IPFS_RPC;
+        // Request
+        const form_data = new FormData();
+        form_data.append("file", inmemfile1); // Pass created inmem file
+        const hash_of_campaignDetails = await axios
+            .post("http://127.0.0.1:5001/api/v0/add", form_data, {
+                headers: {
+                    "Content-Disposition": "form-data",
+                    "Content-Type": "application/octet-stream",
+                },
+            })
+            .then((resp) => {
+                return resp["data"]["Hash"];
+            });
+
+        // Now, validate hash with created campaign structure
+        const campaign_from_ipfs = await axios.get(
+            ipfs_link + hash_of_campaignDetails
+        );
+        // Validate campaignData on ipfs
+        //console.log(campaign_from_ipfs["data"]);
+
+        expect(JSON.stringify(campaign_from_ipfs["data"])).to.equal(
+            JSON.stringify(campaignDetails_RewardPoints)
+        );
+
+        // Deploy rewards points campaign with ipfs hash
+
+        // Only console owners can start campaign, so brand1 is needed here
+        await expect(
+            consoleContract.start_campaign(
+                1,
+                new TextEncoder().encode(hash_of_campaignDetails)
+            )
+        ).to.be.revertedWith("EntityOnly");
+
+        const campaign_start = await consoleContract
+            .connect(brand1)
+            .start_campaign(
+                1,
+                new TextEncoder().encode(hash_of_campaignDetails)
+            );
+
+        await campaign_start.wait(1);
+        //console.log(campaign_start);
+        // Total number of campaigns should increase after this
+        const totalCampaignsNow = await consoleContract._total_campaigns();
+        expect(Number(totalCampaignsNow)).to.equal(1);
+    });
     // Next tests
     // interact_rewardpoints - subscribe a customer to a campaign
     //      customer_details - [phone number, email, qrcode(todo), address]

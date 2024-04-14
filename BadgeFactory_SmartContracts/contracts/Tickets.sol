@@ -20,6 +20,7 @@ contract Tickets {
 
     function set_campaign_owner(address camp_owner) external {
         // setup console as the owner so interactions can happen for that deployed campaign
+        require(campaign_owner == address(0x0), "ShouldBeEmpty");
         campaign_owner = camp_owner;
     }
 
