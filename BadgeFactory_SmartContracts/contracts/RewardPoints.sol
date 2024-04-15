@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
+import "./CampaignBase.sol";
 
 // RewardPoints contract
 // Responsible for everything related to reward points - distribution/claims
@@ -17,13 +18,10 @@ pragma solidity 0.8.20;
 /// _is_cust_subscribed - will move to parent contract, it's crucial component for any campaign to make sure -
 ///    customer is subscribed because there are certain functions that can be done by customers and for that -
 ///    we need to have this modifier for basic check
-contract RewardPoints {
+contract RewardPoints is CampaignBase {
     // ------------- State Vars
-    address public campaign_owner_console;
     uint256 private _total_points;
     uint256 private _total_customers_counter;
-    // Contains IPFS hash of this campaign's details
-    bytes public campaign_details_hash;
 
     mapping(uint256 => address) private _cust_id_to_cust_address;
     mapping(address => bool) private _is_cust_subscribed;
@@ -34,10 +32,6 @@ contract RewardPoints {
     event RewardPointsGained(address _customer, uint256 _points);
 
     // ------------- Modifier
-    modifier onlyConsole() {
-        require(msg.sender == campaign_owner_console, "OnlyConsole!");
-        _;
-    }
 
     // Testing only
     modifier onlySelf(address customer) {
@@ -66,23 +60,6 @@ contract RewardPoints {
         // Deploy once but cloned as many times as required
     }
 
-    // Set campaign owner is also a functionality now, as construction is nothing but a rewards campaign
-    function set_campaign_owner(address camp_owner) external {
-        // setup console as the owner so interactions can happen for that deployed campaign
-        // happens only once
-        // @todo - this is a temp fix until I find a better one, just to make sure we dont keep it open
-        require(campaign_owner_console == address(0x0), "ShouldBeEmpty");
-        campaign_owner_console = camp_owner;
-    }
-
-    // Set campaign hash details
-    function set_campaign_details(
-        bytes memory camp_details
-    ) external onlyConsole {
-        campaign_details_hash = camp_details;
-        // emit that details have been changed
-    }
-
     // A simple public function to get details (metadata) of this campaign
     function get_campaign_details()
         public
@@ -90,6 +67,17 @@ contract RewardPoints {
         returns (bytes memory details_hash)
     {
         details_hash = campaign_details_hash;
+    }
+
+    // Something to override for basic checks
+    function get_campaign_type_and_details()
+        public
+        view
+        override
+        returns (bytes memory campaign_hash, bytes memory campaign_type)
+    {
+        campaign_hash = campaign_details_hash;
+        campaign_type = "Reward Points / (maybe) Air Miles";
     }
 
     // This can be done by customer themselves, but for now we keep
@@ -145,7 +133,7 @@ contract RewardPoints {
     }
 
     function check_owner() external view returns (address) {
-        return campaign_owner_console;
+        return campaign_owner;
     }
 
     function reward_points(

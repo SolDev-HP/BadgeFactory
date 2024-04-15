@@ -2,7 +2,7 @@
 pragma solidity 0.8.20;
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IDeployer.sol";
-import "./interfaces/ICampaign.sol";
+import "./interfaces/ICampaignBase.sol";
 import "./interfaces/IRewardPoints.sol";
 // for type(campaign).creationCode
 import "./interfaces/IBadges.sol";
@@ -134,32 +134,23 @@ contract LoyaltyConsole {
         // Validate campaign deployment
         require(address(_campaign_addr) != address(0), "FailedCampDeploy!");
         // Set self as campaign owner, campaign control is on console
-        ICampaign(_campaign_addr).set_campaign_owner(address(this));
+        ICampaignBase(_campaign_addr).set_campaign_owner(address(this));
+        ICampaignBase(_campaign_addr).set_campaign_details(
+            p_campaign_details_hash
+        );
         // _campaign_id for RewardPoints(1), Badges(2), Tickets(3), Codes(4)
         // Probably needs more data along with each type, changes as we go
         // Set campaign details hash, update related campaign counter
         if (p_campaign_type == 1) {
-            IRewardPoints(_campaign_addr).set_campaign_details(
-                p_campaign_details_hash
-            );
             // Reward points campaigns increased
             _total_points_campaigns += 1;
         } else if (p_campaign_type == 2) {
-            IBadges(_campaign_addr).set_campaign_details(
-                p_campaign_details_hash
-            );
             // Badges campaigns increased
             _total_badges_campaigns += 1;
         } else if (p_campaign_type == 3) {
-            ITickets(_campaign_addr).set_campaign_details(
-                p_campaign_details_hash
-            );
             // Total tickets
             _total_tickets_campaigns += 1;
         } else if (p_campaign_type == 4) {
-            ICodes(_campaign_addr).set_campaign_details(
-                p_campaign_details_hash
-            );
             // Total codes
             _total_codes_campaigns += 1;
         }
