@@ -128,7 +128,7 @@ describe("LoyaltyConsole", function () {
         const consoleContract = consoleFactory.attach(loyaltyConsoleAddress);
 
         // No. of deployed campaign should be 0 at this time
-        const totalCampaigns = await consoleContract._total_campaigns();
+        const totalCampaigns = await consoleContract.total_campaigns();
         expect(totalCampaigns).to.equal(0);
     });
 
@@ -156,7 +156,7 @@ describe("LoyaltyConsole", function () {
 
         // No. of deployed campaign should be 0 at this time
         // Validate increase after deploying the campaign
-        const totalCampaigns = await consoleContract._total_campaigns();
+        const totalCampaigns = await consoleContract.total_campaigns();
         expect(totalCampaigns).to.equal(0);
         // Prepare a console details structure
         // struct Campaign {
@@ -238,7 +238,7 @@ describe("LoyaltyConsole", function () {
         await campaign_start.wait(1);
         //console.log(campaign_start);
         // Total number of campaigns should increase after this
-        const totalCampaignsNow = await consoleContract._total_campaigns();
+        const totalCampaignsNow = await consoleContract.total_campaigns();
         expect(Number(totalCampaignsNow)).to.equal(1);
         // And total of 1 rewards points campaign deployed as of now, validate
         const totalPointsCampNow =
@@ -310,7 +310,7 @@ describe("LoyaltyConsole", function () {
         const consoleContract = consoleFactory.attach(loyaltyConsoleAddress2);
         // No. of deployed campaign should be 0 at this time
         // Validate increase after deploying the campaign
-        let totalCampaigns = await consoleContract._total_campaigns();
+        let totalCampaigns = await consoleContract.total_campaigns();
         expect(totalCampaigns).to.equal(0);
 
         // Now we deploy it
@@ -408,7 +408,7 @@ describe("LoyaltyConsole", function () {
 
         await campaign_start.wait(1);
         // Total number of campaigns should increase after this
-        const totalCampaignsNow = await consoleContract._total_campaigns();
+        const totalCampaignsNow = await consoleContract.total_campaigns();
         expect(Number(totalCampaignsNow)).to.equal(1);
 
         // Expect total supported campaign types to be 3

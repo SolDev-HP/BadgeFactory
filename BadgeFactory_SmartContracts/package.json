@@ -26,5 +26,12 @@
     "dotenv": "^16.4.5"
   },
   "scripts": {
+    "clean": "yarn hardhat clean",
+    "compile": "yarn hardhat compile --force",
+    "test": "yarn hardhat test",
+    "testl2": "yarn hardhat test --network hardhat_morphl2_fork",
+    "testwithgas": "REPORT_GAS=true yarn hardhat test",
+    "testl2withgas": "REPORT_GAS=true yarn hardhat test --network hardhat_morphl2_fork",
+    "sizes": "yarn hardhat size-contracts"
   }
 }

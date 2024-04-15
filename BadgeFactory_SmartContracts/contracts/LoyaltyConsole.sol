@@ -20,12 +20,13 @@ contract LoyaltyConsole {
     // Keeping them all public can be useful in UI/UX
     // These can be moved to private or offchain, we can keep track of each with event emitted
     // @todo check if it actually saves gas and storage space
-    uint256 public _total_campaigns;
+    uint256 public total_campaigns;
     // Only total, @todo add way to check support for given campaign type
     uint256 public total_supported_campaigns;
     // Home Address
     address private _factory;
     address private _campaigns_deployer;
+    uint256 private _total_customers;
 
     // Role mapper
     // @todo: verify msg.sender vs tx.origin
@@ -50,6 +51,11 @@ contract LoyaltyConsole {
     // Entity can deploy same campaign multiple times
     // record all deployments to keep track within this console
     mapping(uint256 => address[]) private _campaign_type_to_list_of_deployed;
+
+    // Add customer subscription here, campaign interactions happen from
+    // console (for now) anyway
+    // This will later change to id => cust_data_hash
+    mapping(uint256 => address) private _cust_id_to_cust_address;
 
     // ------------- Constructor
     // Deploy with list of deployable + supported campaigns for this console
@@ -106,6 +112,11 @@ contract LoyaltyConsole {
         address customer_data
     ) public roleEntity {
         require(!_is_address_Customer[customer_data], "AlreadySubbed");
+        // cust_id is what total_customer is right now, so first cust starts at 0
+        _cust_id_to_cust_address[_total_customers] = customer_data;
+        // total customers have increased
+        _total_customers += 1;
+        // customer is now subscribed to use the loyalty system
         _is_address_Customer[customer_data] = true;
     }
 
@@ -146,7 +157,7 @@ contract LoyaltyConsole {
         // Set campaign details hash, update related campaign counter
         campaign_type_to_deploy_count[p_campaign_type] += 1;
         // Increase total
-        _total_campaigns += 1;
+        total_campaigns += 1;
         // Add to list of deployed
         _campaign_type_to_list_of_deployed[p_campaign_type].push(
             address(_campaign_addr)
@@ -189,7 +200,14 @@ contract LoyaltyConsole {
             // If we add a custoemr into reward points, add into loyaltyconsole
             // This will change in later versions
             _is_address_Customer[customer] = true;
+            // This way, we allow customer to choose if they'd want to
+            // participate in any given loyalty campaign. By default, they
+            // are included, but they can interct with campaign and unsubscribe
             IRewardPoints(campAddr).subscribe_customer(customer);
+            // Subscribe to loyalty system as well, if not already
+            if (!_is_address_Customer[customer]) {
+                subscribe_to_loyalty_system(customer);
+            }
         } else {
             // if points are nonzero, it's an reward/redeem - reward_points
             if (_is_allocation) {
