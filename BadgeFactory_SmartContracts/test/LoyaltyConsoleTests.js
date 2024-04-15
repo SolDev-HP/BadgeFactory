@@ -227,10 +227,11 @@ describe("LoyaltyConsole", function () {
             )
         ).to.be.revertedWith("EntityOnly");
 
+        const campaign_type = 1;
         const campaign_start = await consoleContract
             .connect(brand1)
             .start_campaign(
-                1,
+                campaign_type,
                 new TextEncoder().encode(hash_of_campaignDetails)
             );
 
@@ -241,7 +242,7 @@ describe("LoyaltyConsole", function () {
         expect(Number(totalCampaignsNow)).to.equal(1);
         // And total of 1 rewards points campaign deployed as of now, validate
         const totalPointsCampNow =
-            await consoleContract._total_points_campaigns();
+            await consoleContract.campaign_type_to_deploy_count(campaign_type);
         expect(Number(totalPointsCampNow)).to.equal(1);
 
         // IT wont let it start other types though (badges, tickets, codes)
@@ -419,6 +420,45 @@ describe("LoyaltyConsole", function () {
         // how do you read them and what do they represent
 
         // Get deployed campaign 1 here, and perform ops
+
+        /**
+        {
+            // Checkup
+            // factory address
+            const factroyaddress = await consoleContract._factory();
+            console.log(`Factory address: ${factroyaddress}`);
+            console.log(`BadgeFactory address: ${await badgefactory.getAddress()}`);
+            //_campaign_type_to_implementation
+            const rewards_impl_at =
+                await consoleContract._campaign_type_to_implementation(1);
+            const badges_impl_at =
+                await consoleContract._campaign_type_to_implementation(2);
+            const tickets_impl_at =
+                await consoleContract._campaign_type_to_implementation(3);
+            const codes_impl_at =
+                await consoleContract._campaign_type_to_implementation(4); // is unset becuase not supported
+
+            console.log(`--- impl deployed at
+                Rewards(Impl): ${rewards_impl_at}
+                Badges(Impl): ${badges_impl_at}
+                Tickets(Impl): ${tickets_impl_at}
+                Codes(Impl): ${codes_impl_at}`);
+
+            console.log(`--- Passed in (validation)
+                Rewards(on factory): ${await rewardpoints_campImpl.getAddress()},
+                Badges (factory): ${await badges_campImpl.getAddress()},
+                Tickets (factory): ${await tickets_campImpl.getAddress()},
+                Codes (factory): ${await codes_campImpl.getAddress()}
+            `);
+            // _campaign_type_to_list_of_deployed
+            // rewards' first
+            const reward1_camp_at =
+                await consoleContract._campaign_type_to_list_of_deployed(1, 0);
+
+            console.log(`--- cloned campaigns
+            Reward1 Campaign at: ${reward1_camp_at}`);
+        }
+        */
     });
     // Next tests
     // interact_rewardpoints - subscribe a customer to a campaign

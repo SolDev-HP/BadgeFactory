@@ -21,38 +21,35 @@ contract LoyaltyConsole {
     // These can be moved to private or offchain, we can keep track of each with event emitted
     // @todo check if it actually saves gas and storage space
     uint256 public _total_campaigns;
+    // Only total, @todo add way to check support for given campaign type
     uint256 public total_supported_campaigns;
-    uint256 public _total_points_campaigns;
-    uint256 public _total_badges_campaigns;
-    uint256 public _total_tickets_campaigns;
-    uint256 public _total_codes_campaigns;
     // Home Address
-    address private _factory;
+    address public _factory;
     address private _campaigns_deployer;
 
+    // Role mapper
+    // @todo: verify msg.sender vs tx.origin
+    mapping(address => bool) public _is_address_Entity;
+    // This would change once we add Customer_data_hash, for now it'll work
+    mapping(address => bool) public _is_address_Customer;
     // Supported campaigns - and where their clones are (Address)
-    enum Campaign_Types {
-        REWARD_POINTS,
-        BADGES,
-        TICKETS,
-        CODES
-    }
-    Campaign_Types camp_type_choice;
-    mapping(uint256 => address) private campaign_type_to_implementation;
+    // enum Campaign_Types {
+    //     REWARD_POINTS,
+    //     BADGES,
+    //     TICKETS,
+    //     CODES
+    // }
+    // Campaign_Types camp_type_choice;
+    mapping(uint256 => uint256) public campaign_type_to_deploy_count;
+    mapping(uint256 => address) public _campaign_type_to_implementation;
 
     // LoyaltyConsole:
     // Entity: deploy new campaigns, register new users, modify campaigns, remove campaigns
     // Customer: participate or register with entity
 
-    // Role mapper
-    // @todo: verify msg.sender vs tx.origin
-    mapping(address => bool) private _is_address_Entity;
-    // This would change once we add Customer_data_hash, for now it'll work
-    mapping(address => bool) private _is_address_Customer;
-
     // Entity can deploy same campaign multiple times
     // record all deployments to keep track within this console
-    mapping(uint256 => address[]) private _campaign_type_to_list_of_deployed;
+    mapping(uint256 => address[]) public _campaign_type_to_list_of_deployed;
 
     // ------------- Constructor
     // Deploy with list of deployable + supported campaigns for this console
@@ -70,7 +67,7 @@ contract LoyaltyConsole {
         // tx.origin should be business/brand that is interacting with BadgeFactory.sol
         _is_address_Entity[tx.origin] = true;
         for (uint256 i = 0; i < supported_types.length; i++) {
-            campaign_type_to_implementation[
+            _campaign_type_to_implementation[
                 supported_types[i]
             ] = types_implementations[i];
             total_supported_campaigns += 1;
@@ -129,13 +126,13 @@ contract LoyaltyConsole {
 
         // Do we have requested campaign implementation available?
         require(
-            campaign_type_to_implementation[p_campaign_type] != address(0x0),
+            _campaign_type_to_implementation[p_campaign_type] != address(0x0),
             "CampNotSupported"
         );
 
         // Clone required campaign type
         _campaign_addr = Clones.clone(
-            campaign_type_to_implementation[p_campaign_type]
+            _campaign_type_to_implementation[p_campaign_type]
         );
         // Validate campaign deployment
         require(address(_campaign_addr) != address(0), "FailedCampDeploy!");
@@ -147,20 +144,7 @@ contract LoyaltyConsole {
         // _campaign_id for RewardPoints(1), Badges(2), Tickets(3), Codes(4)
         // Probably needs more data along with each type, changes as we go
         // Set campaign details hash, update related campaign counter
-        if (p_campaign_type == 1) {
-            // Reward points campaigns increased
-            _total_points_campaigns += 1;
-        } else if (p_campaign_type == 2) {
-            // Badges campaigns increased
-            _total_badges_campaigns += 1;
-        } else if (p_campaign_type == 3) {
-            // Total tickets
-            _total_tickets_campaigns += 1;
-        } else if (p_campaign_type == 4) {
-            // Total codes
-            _total_codes_campaigns += 1;
-        }
-
+        campaign_type_to_deploy_count[p_campaign_type] += 1;
         // Increase total
         _total_campaigns += 1;
         // Add to list of deployed
@@ -198,10 +182,12 @@ contract LoyaltyConsole {
         );
         // Get the latest deployed rewardpoints campaign
         address campAddr = _campaign_type_to_list_of_deployed[campaign_type][
-            _total_points_campaigns - 1
+            campaign_type_to_deploy_count[campaign_type] - 1
         ];
         // If no points interaction (points are 0), subscribe
         if (points == 0) {
+            // If we add a custoemr into reward points, add into loyaltyconsole
+            // This will change in later versions
             _is_address_Customer[customer] = true;
             IRewardPoints(campAddr).subscribe_customer(customer);
         } else {
