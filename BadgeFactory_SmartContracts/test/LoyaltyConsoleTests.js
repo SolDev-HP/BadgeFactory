@@ -677,6 +677,68 @@ describe("LoyaltyConsole", function () {
             cust1,
             cust2,
         } = await loadFixture(deployLoyaltyConsoleFixture);
-        
+
+        // Steps
+        // register customer to loyalty console
+        //// get loyalty console contract - owner brand1
+        let console_factory = await ethers.getContractFactory("LoyaltyConsole");
+        const consoleContract = console_factory.attach(loyaltyConsoleAddress);
+
+        let cust1_address = await cust1.getAddress();
+        let cust1_sub_tx = await consoleContract
+            .connect(brand1)
+            .subscribe_to_loyalty_system(cust1_address);
+        await cust1_sub_tx.wait(1);
+
+        // Deploy reward points
+        // No info hash, just reward points reward/redeem functionality check
+        let camp_dep_tx = await consoleContract
+            .connect(brand1)
+            .start_campaign(1, new TextEncoder().encode(0));
+        await camp_dep_tx.wait(1);
+
+        /// Get campaign address
+        let camp_address =
+            await consoleContract._campaign_type_to_list_of_deployed(1, 0);
+
+        // distribute points
+        //// Make sure cust has 0 points
+        let rewardpoints_factory = await ethers.getContractFactory(
+            "RewardPoints"
+        );
+        const rewardpoints_contract = rewardpoints_factory.attach(camp_address);
+        //// cust has 0 points
+        await expect(
+            await rewardpoints_contract
+                .connect(cust1)
+                .get_self_points(cust1_address)
+        ).to.be.equal(0);
+        //// Entity distributes reward points
+
+        let rp_dist_tx = await consoleContract
+            .connect(brand1)
+            .interact_rewardpoints(cust1_address, 10000, 1, 1);
+        await rp_dist_tx.wait(1);
+
+        //// Validate customer received 10000 points
+        await expect(
+            await rewardpoints_contract
+                .connect(cust1)
+                .get_self_points(cust1_address)
+        ).to.be.equal(10000);
+        // customer redeems some points
+        // entity redeems 150 points on behalf of custoemr for the interaction
+
+        let rp_redeem_tx = await consoleContract
+            .connect(brand1)
+            .interact_rewardpoints(cust1_address, 150, 1, 0);
+        await rp_redeem_tx.wait(1);
+
+        // customer now has 10000 - 150 = 9850
+        await expect(
+            await rewardpoints_contract
+                .connect(cust1)
+                .get_self_points(cust1_address)
+        ).to.be.equal(9850);
     });
 });
