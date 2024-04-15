@@ -78,6 +78,7 @@ const campaignDetails = {
                     _can_expire: true/false,
                     _expiry: timestamp,
                     _can_transfer: true/false,
+                    _img_ipfs_hash: bytes,
                     // can add more functional details but these are mainly for UI/UX
                     // smartcontracts are only handling the hash of that ipfs data
                     // This can change based on which details are important enough to be
@@ -104,7 +105,7 @@ const campaignDetails = {
             // any other restrictions..
             // Not considering for this hackathon, but will add once it's done.
         },
-    }
+    },
     _campaign_active: true,                         // Is campaign currently active
 };
 ```
