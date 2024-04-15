@@ -28,6 +28,102 @@ IF want to run local IPFS daemon:
 
 ---
 
+##### How to run, hardhat tests, and what you need for each
+
+1. clone this repo locally,
+2. If you want to use local ipfs daemon without external connection,<br/>
+   2a. Go to /BadgeFactory_Tools/Local_IPFS_Node/kubo_local/kubo<br/>
+   2b. OR download kubo from: [IPFS Kubo](https://docs.ipfs.tech/install/command-line/)<br/>
+
+   ```bash
+   # OR follow guide at https://docs.ipfs.tech/install/command-line/
+   $> sudo ./install.sh
+   # once it has been installed
+   $> ipfs daemon --offline
+   # run offline daemon - it will start following things
+   # ...
+   # Swarm not listening, running in offline mode.
+   # RPC API server listening on /ip4/127.0.0.1/tcp/5001
+   # WebUI: http://127.0.0.1:5001/webui
+   # Gateway server listening on /ip4/127.0.0.1/tcp/8080
+   # .... let it run, open new terminal for next steps
+   ```
+
+   2c: Setup IPFS link in environment file, you'll need to setup .env file by copying .env-example<br/>
+
+   ```bash
+   $> cp .env-example .env
+   $> vim .env
+   # Edit following details
+   # IPFS_RPC="" -> IPFS_RPC="http://127.0.0.1:8080/ipfs/"
+   ```
+
+3. If you want test use of MorphL2 fork on hardhat node<br/>
+   3a. make sure hardhat.config file includes hardhat_morphl2_fork and respective details<br/>
+   3b. you'll need to setup .env file by copying .env-example (if you haven't already)<br/>
+
+   ```bash
+   $> cp .env-example .env
+   $> vim .env
+   # Verify following details is present
+   # MORPHL2_TESTNET_RPC="https://rpc-testnet.morphl2.io"
+   ```
+
+   3c. Run hardhat node and keep it running<br/>
+
+   ```bash
+   $> yarn hardhat node
+   # ----- OR
+   $> npm hardhat node
+   # ...
+   # Started HTTP and WebSocket JSON-RPC server at http://127.0.0.1:8545/
+   ```
+
+   <br/>
+
+4. hardhat folder is /BadgeFactory_SmartContracts, go in there 2. Install all depedencies using `npm` or `yarn` (I'm using yarn)
+
+```bash
+$../BadgeFactory_SmartContracts/>yarn install
+# ---- OR
+$../BadgeFactory_SmartContracts/>npm install --dev
+```
+
+5. following are build commands I've place in `package.json`, and I'm using `yarn` but `npm` ones are listed as well, choose whichever. Perform tests, no ignition modules for now
+
+```bash
+# 1. Clean and compile all contracts
+$> yarn clean
+$> yarn compile
+#   ----- OR
+$> npm hardhat clean
+$> npm hardhat compile --force
+
+# 2. Test contracts with default network as hardhat (No hardhat node needed)
+$> yarn test
+#   ----- OR
+$> npm hardhat test
+
+# 3. Test contracts on local morphL2 fork on hardhat node (hardhat node running)
+$> yarn testl2
+# -------- OR
+$> npm hardhat test --network hardhat_morphl2_fork
+
+# 4. Report gas
+$> yarn testwithgas
+$> yarn testl2withgas
+# ----------OR
+$> REPORT_GAS=true npm hardhat test
+$> REPORT_GAS=true npm hardhat test --network hardhat_morphl2_fork
+
+# 5. Report contract sizes
+$> yarn sizes
+# ---------- OR
+$> npm hardhat size-contracts
+```
+
+---
+
 On branch: feature_campaign_struct
 Reason: We need a generalized campaign details structure for reward points, loyalty badges, tickets, and coupon/discount codes. As I have following structure in place, I'll expand upon it and modify unittest data accordingly.
 
