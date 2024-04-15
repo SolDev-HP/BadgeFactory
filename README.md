@@ -25,3 +25,27 @@ Legends are renamed correctly, many functions are already implemented in smart c
 
 IF want to run local IPFS daemon:
 /BadgeFactory_Tools/Local_IPFS_Node/kubo_local and then run `sudo bash install.sh`
+
+---
+
+On branch: feature_campaign_struct
+Reason: We need a generalized campaign details structure for reward points, loyalty badges, tickets, and coupon/discount codes. As I have following structure in place, I'll expand upon it and modify unittest data accordingly.
+
+```javascript
+const campaignDetails = {
+    campaign_id: Number(totalCampaigns) + 1, // Some identifier, for now we keep it total+1
+    campaign_type: [1...4], // type of campaign (selectable range [1, 4])
+    campaign_name: "Campaign Name", // bytes32, only 32 letters ascii
+    campaign_details: "Campaign Details", // bytes32, only 32 letters ascii
+    campaign_start_date: "block.timestamp?", // Starting datetime of Campaign
+    campaign_end_date: "block.timestamp?", // Campaign ending datetime
+    campaign_owner: address, // Which console deployed it
+    campaign_specific_data: {
+        reward_points_campaign: { },
+        _badges_campaign: { },
+        _tickets_campaign: { },
+        _codes_campaign: { },
+    }
+    _campaign_active: true,                         // Is campaign currently active
+};
+```
