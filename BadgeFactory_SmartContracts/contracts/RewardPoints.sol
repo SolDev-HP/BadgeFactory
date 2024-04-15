@@ -117,9 +117,10 @@ contract RewardPoints {
     // data hash for customer data can only work if we store that data securely, not on ipfs.
     // So internal ipfs here will be considered ipfs controlled by loyaltyconsole deployer entities.
     // but campaign data can be actively available, so public writtable ipfs node can work.
+
     // function subscribe_customer(bytes customer_data_hash) external onlyConsole {}
     // function unsubscribe_customer(bytes customer_data_hash) external onlyConsole {}
-    // function update_customer(bytes customer_details_hash) external onlyConsole {}
+    // function update_customer(bytes customer_data_hash) external onlyConsole {}
     // function update_profile(bytes customer_data_extended) external onlySelf {//cust only}
 
     function total_subscribers()

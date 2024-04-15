@@ -269,6 +269,11 @@ describe("LoyaltyConsole", function () {
                     new TextEncoder().encode(hash_of_campaignDetails)
                 )
         ).to.be.revertedWith("CampNotSupported");
+
+        // Only one campaign type supported
+        const numberOfSupportedCampaigns =
+            await consoleContract.total_supported_campaigns();
+        expect(Number(numberOfSupportedCampaigns)).to.equal(1);
     });
 
     // It should allow deployment of only supported campaigns
@@ -405,6 +410,14 @@ describe("LoyaltyConsole", function () {
         // Total number of campaigns should increase after this
         const totalCampaignsNow = await consoleContract._total_campaigns();
         expect(Number(totalCampaignsNow)).to.equal(1);
+
+        // Expect total supported campaign types to be 3
+        const totalCampaignsSupported =
+            await consoleContract.total_supported_campaigns();
+        expect(Number(totalCampaignsSupported)).to.equal(3);
+
+        // try to create new campaign_types and add them onto ipfs
+        // how do you read them and what do they represent
     });
     // Next tests
     // interact_rewardpoints - subscribe a customer to a campaign

@@ -3,6 +3,13 @@ pragma solidity 0.8.20;
 
 // LoyaltyBadges contract -> renamed to Badges, avoids confusion with LoyaltyConsole
 // Everything related to loyalty badges - owner, exchange, review
+// What is the basic functionality of Loyalty Badges
+// Let's assume that a business wants to distribute loyalty badges to their loyalest customers,
+// who can use this badge to gain X% discount on the purchase - validity is limited by start time and -
+// end time of the badge_validity_period. These can be super rare like a lifetime 5% off badge, or may -
+// be businesses/brands can assign this badge as honor among their customers, or there are other use cases -
+// some known and some are yet to be tested.
+
 contract Badges {
     // ------------- State Vars
     address public campaign_owner;

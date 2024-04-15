@@ -131,9 +131,13 @@ contract LoyaltyConsole {
         _campaign_addr = Clones.clone(
             campaign_type_to_implementation[p_campaign_type]
         );
+        // Validate campaign deployment
+        require(address(_campaign_addr) != address(0), "FailedCampDeploy!");
+        // Set self as campaign owner, campaign control is on console
         ICampaign(_campaign_addr).set_campaign_owner(address(this));
         // _campaign_id for RewardPoints(1), Badges(2), Tickets(3), Codes(4)
         // Probably needs more data along with each type, changes as we go
+        // Set campaign details hash, update related campaign counter
         if (p_campaign_type == 1) {
             IRewardPoints(_campaign_addr).set_campaign_details(
                 p_campaign_details_hash
@@ -160,8 +164,6 @@ contract LoyaltyConsole {
             _total_codes_campaigns += 1;
         }
 
-        // Validate campaign deployment
-        require(address(_campaign_addr) != address(0), "FailedCampDeploy!");
         // Increase total
         _total_campaigns += 1;
         // Add to list of deployed
@@ -205,19 +207,27 @@ contract LoyaltyConsole {
         bool _is_allocation
     ) public roleEntity returns (uint total) {
         // Fidn last deployed reward points campaign
+        // Make sure we have atleast 1 reward points campaign deployed
+        require(
+            _campaign_type_to_list_of_deployed[campaign_type][0] !=
+                address(0x0),
+            "NoCampaign"
+        );
+        // Get the latest deployed rewardpoints campaign
         address campAddr = _campaign_type_to_list_of_deployed[campaign_type][
             _total_points_campaigns - 1
         ];
-        // If no points interaction, subscribe
+        // If no points interaction (points are 0), subscribe
         if (points == 0) {
             IRewardPoints(campAddr).subscribe_customer(customer);
             return 0;
-        }
-        // If it's an allocation - reward_points
-        if (_is_allocation) {
-            total = IRewardPoints(campAddr).reward_points(customer, points);
         } else {
-            total = IRewardPoints(campAddr).redeem_points(customer, points);
+            // if points are nonzero, it's an reward/redeem - reward_points
+            if (_is_allocation) {
+                total = IRewardPoints(campAddr).reward_points(customer, points);
+            } else {
+                total = IRewardPoints(campAddr).redeem_points(customer, points);
+            }
         }
     }
 
