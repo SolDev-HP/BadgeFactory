@@ -221,19 +221,17 @@ describe("LoyaltyConsole", function () {
 
         // Only console owners can start campaign, so brand1 is needed here
         await expect(
-            consoleContract.start_campaign(
-                1,
-                new TextEncoder().encode(hash_of_campaignDetails)
-            )
+            consoleContract.start_campaign(1, [
+                new TextEncoder().encode(hash_of_campaignDetails),
+            ])
         ).to.be.revertedWith("EntityOnly");
 
         const campaign_type = 1;
         const campaign_start = await consoleContract
             .connect(brand1)
-            .start_campaign(
-                campaign_type,
-                new TextEncoder().encode(hash_of_campaignDetails)
-            );
+            .start_campaign(campaign_type, [
+                new TextEncoder().encode(hash_of_campaignDetails),
+            ]);
 
         await campaign_start.wait(1);
         //console.log(campaign_start);
@@ -249,26 +247,23 @@ describe("LoyaltyConsole", function () {
         await expect(
             consoleContract
                 .connect(brand1)
-                .start_campaign(
-                    2,
-                    new TextEncoder().encode(hash_of_campaignDetails)
-                )
+                .start_campaign(2, [
+                    new TextEncoder().encode(hash_of_campaignDetails),
+                ])
         ).to.be.revertedWith("CampNotSupported");
         await expect(
             consoleContract
                 .connect(brand1)
-                .start_campaign(
-                    3,
-                    new TextEncoder().encode(hash_of_campaignDetails)
-                )
+                .start_campaign(3, [
+                    new TextEncoder().encode(hash_of_campaignDetails),
+                ])
         ).to.be.revertedWith("CampNotSupported");
         await expect(
             consoleContract
                 .connect(brand1)
-                .start_campaign(
-                    4,
-                    new TextEncoder().encode(hash_of_campaignDetails)
-                )
+                .start_campaign(4, [
+                    new TextEncoder().encode(hash_of_campaignDetails),
+                ])
         ).to.be.revertedWith("CampNotSupported");
 
         // Only one campaign type supported
@@ -417,18 +412,16 @@ describe("LoyaltyConsole", function () {
 
         // Only console owners can start campaign, so brand1 is needed here
         await expect(
-            consoleContract.start_campaign(
-                1,
-                new TextEncoder().encode(hash_of_campaigns[0]["Hash"])
-            )
+            consoleContract.start_campaign(1, [
+                new TextEncoder().encode(hash_of_campaigns[0]["Hash"]),
+            ])
         ).to.be.revertedWith("EntityOnly");
 
         const campaign_start = await consoleContract
             .connect(brand1)
-            .start_campaign(
-                1,
-                new TextEncoder().encode(hash_of_campaigns[0]["Hash"])
-            );
+            .start_campaign(1, [
+                new TextEncoder().encode(hash_of_campaigns[0]["Hash"]),
+            ]);
 
         await campaign_start.wait(1);
         // Total number of campaigns should increase after this
@@ -437,10 +430,9 @@ describe("LoyaltyConsole", function () {
 
         const campaign_start_badges = await consoleContract
             .connect(brand1)
-            .start_campaign(
-                2,
-                new TextEncoder().encode(hash_of_campaigns[1]["Hash"])
-            );
+            .start_campaign(2, [
+                new TextEncoder().encode(hash_of_campaigns[1]["Hash"]),
+            ]);
 
         await campaign_start_badges.wait(1);
         // Total number of campaigns should increase after this
@@ -449,10 +441,9 @@ describe("LoyaltyConsole", function () {
 
         const campaign_start_tickets = await consoleContract
             .connect(brand1)
-            .start_campaign(
-                3,
-                new TextEncoder().encode(hash_of_campaigns[2]["Hash"])
-            );
+            .start_campaign(3, [
+                new TextEncoder().encode(hash_of_campaigns[2]["Hash"]),
+            ]);
 
         await campaign_start_tickets.wait(1);
         // Total number of campaigns should increase after this
@@ -463,7 +454,7 @@ describe("LoyaltyConsole", function () {
         await expect(
             consoleContract.connect(brand1).start_campaign(
                 4, // Campaign type 4 - coupon codes - not supported
-                new TextEncoder().encode(hash_of_campaigns[2]["Hash"]) //reuse details hash
+                [new TextEncoder().encode(hash_of_campaigns[2]["Hash"])] //reuse details hash
             )
         ).to.be.revertedWith("CampNotSupported");
 
@@ -609,7 +600,7 @@ describe("LoyaltyConsole", function () {
         // Deploy reward points
         let deploy_rp_tx = await loyaltyConsoleContract
             .connect(brand1)
-            .start_campaign(1, new TextEncoder().encode(0)); // Sending details as 0, nothing for now, just to test
+            .start_campaign(1, [new TextEncoder().encode(0)]); // Sending details as 0, nothing for now, just to test
         await deploy_rp_tx.wait(1);
 
         // If campaign starts, get the campaign address from loyalty console
@@ -694,7 +685,7 @@ describe("LoyaltyConsole", function () {
         // No info hash, just reward points reward/redeem functionality check
         let camp_dep_tx = await consoleContract
             .connect(brand1)
-            .start_campaign(1, new TextEncoder().encode(0));
+            .start_campaign(1, [new TextEncoder().encode(0)]);
         await camp_dep_tx.wait(1);
 
         /// Get campaign address

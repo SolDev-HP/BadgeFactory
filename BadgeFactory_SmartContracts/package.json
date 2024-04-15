@@ -1,6 +1,6 @@
 {
   "name": "badgefactory",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "to SolDev-HP until otherwise metioned :D",
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
@@ -20,6 +20,7 @@
     "hardhat-contract-sizer": "^2.10.0",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.8.0",
+    "solmate": "^6.2.0",
     "typechain": "^8.3.0"
   },
   "dependencies": {

@@ -36,7 +36,7 @@ contract CampaignBase is ICampaignBase {
 
     function set_campaign_owner(address _campaign_owner) external {
         // I'll move to rolebased systems that are already established -
-        // like openzeppelin, once I make sure all campaign child contract -
+        // like openzeppelin or solmate, once I make sure all campaign child contract -
         // and their deployment sizes are within bounds after adding all -
         // required functionalities to them. So till then, -
         // we use a function that can - only once

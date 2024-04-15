@@ -5,7 +5,8 @@ import "./interfaces/IDeployer.sol";
 import "./interfaces/ICampaignBase.sol";
 import "./interfaces/IRewardPoints.sol";
 
-// import "./interfaces/IBadges.sol";
+import "./interfaces/IBadges.sol";
+
 // import "./interfaces/ITickets.sol";
 // import "./interfaces/ICodes.sol";
 
@@ -143,8 +144,11 @@ contract LoyaltyConsole {
     // return var is reused within the function, so I'm keeping it until next Refactor comes @todo
     function start_campaign(
         uint p_campaign_type,
-        bytes memory p_campaign_details_hash
+        bytes[] memory p_campaign_details_hash
     ) public roleEntity returns (address _campaign_addr) {
+        // Verify that we have atleast 1 hash with details
+        // dont matter if it's 0x0 but there has to be atleast one
+        require(p_campaign_details_hash.length > 0, "Atleast1Hash");
         // Assumed
         require((0 < p_campaign_type) && (p_campaign_type < 5), "1to4Only!");
         // Deployer is needed but deployer doesn't do anything for now. if you run into this,
@@ -165,9 +169,21 @@ contract LoyaltyConsole {
         require(address(_campaign_addr) != address(0), "FailedCampDeploy!");
         // Set self as campaign owner, campaign control is on console
         ICampaignBase(_campaign_addr).set_campaign_owner(address(this));
+        //// one hash sets by default, this sets Campaignbase details_hash
         ICampaignBase(_campaign_addr).set_campaign_details(
-            p_campaign_details_hash
+            p_campaign_details_hash[0]
         );
+        if (p_campaign_details_hash.length > 1) {
+            // we verified that hashs array contain atleast one element
+            // Set total_badges_types first
+            IBadges(_campaign_addr).set_total_badges_types(
+                p_campaign_details_hash.length
+            );
+            // Then setup all badges types with their corresponding details_hash in the list
+            IBadges(_campaign_addr).set_badges_details_hashes(
+                p_campaign_details_hash
+            );
+        }
         // _campaign_id for RewardPoints(1), Badges(2), Tickets(3), Codes(4)
         // Probably needs more data along with each type, changes as we go
         // Set campaign details hash, update related campaign counter
@@ -236,7 +252,18 @@ contract LoyaltyConsole {
         }
     }
 
-    function interact_badges() public roleEntity {}
+    function interact_badges(
+        address customer,
+        uint256 _p_action,
+        bool _is_setup,
+        bytes[] memory _badges_hashes
+    ) public roleEntity {
+        // So for badges, we can have following interactions:
+        // Subscribe(1): customer subscribe to deployed badges campaign
+        // Set_Total_types_of_Badges(2): set total types of badges(uint256 x)
+        // set_all_badges_details(3):
+        // Entity creates badges campaign, hasn't
+    }
 
     function interact_tickets() public roleEntity {}
 

@@ -13,8 +13,23 @@ import "./CampaignBase.sol";
 
 contract Badges is CampaignBase {
     // ------------- State Vars
-    // ------------- Modifier
+    uint256 public total_types_of_badges;
+    uint256 public total_badges_circulating;
+    uint256 private _total_customer_count;
 
+    // Customer if specifically subscribed for this campaign only
+    mapping(address => bool) private _cust_address_to_isSubscribed;
+
+    // Badges details, how many customer holds, which badges customer holds
+    mapping(address => uint256) private _cust_address_to_total_held_badges;
+    mapping(address => uint256[]) private _cust_add_to_held_badges_list;
+    mapping(uint256 => bytes) private _badge_type_to_badge_details_hash;
+
+    // Badgetype -> visibility (for all customers) - So by default visibility is public
+    mapping(uint256 => bool) private _badge_type_to_is_privately_visible_only;
+
+    // ------------- Modifier
+    // we already have onlyConsole() available,
     // Badges can be
     // - Lifetype validity, no expiry, can be used anytime
     // - limited time validity, expires
@@ -44,7 +59,77 @@ contract Badges is CampaignBase {
         campaign_type = "Loyalty Badges";
     }
 
+    //// Set total types of badges, this can be updated by onlyConsole
+    //// may emit an event for badges_types_updates or something
+    function set_total_badges_types(uint256 _total_types) external onlyConsole {
+        // This should happen once at the beggning when campaign deploy
+        // happens
+        total_types_of_badges = _total_types;
+    }
+
+    //// Console initiated Badges with N types, allow them to set hashes for all
+    //// Has to supply hash_list of length of total supported badge types
+    function set_all_badges_details_hashes(
+        bytes[] memory _p_all_hashes_list // list has to be atleast 1,
+    ) public onlyConsole {
+        // Has to make sure, total_badges_types == length of p_hashes_list
+        require(total_types_of_badges > 0, "0BadgeTypesSet");
+        require(
+            _p_all_hashes_list.length == total_types_of_badges,
+            "MoreHashesThanSupported"
+        );
+        // If title BadgeDetails hasn't been set in super()
+        if (campaign_details_hash.length == 0) {
+            campaign_details_hash = _p_all_hashes_list[0];
+        }
+        // Set all badges hashes details
+        // _badge_type_to_badge_details_hash(uint -> bytes)
+        // Supports type 1,2,3 and has set hash details for only 1 -
+        // 2 and 3 can be empty (set 0x0 in list) and that's okay,
+        // they can recall this to update hash with the new one
+        for (uint i = 0; i < total_types_of_badges; ++i) {
+            // Don;t clean up, update the necessary one only
+            if (_p_all_hashes_list[i].length == 0) {
+                continue;
+                // Don't update currently set detail hash -
+                // if zero keep, if nonzero - don't update
+            }
+            // Non zero hash, update current hash associated with hashtype
+            // hashtype is p_all_hashes_list indirect index
+            // 0 type is first badge
+            // 1 type is second badge and so on...
+            _badge_type_to_badge_details_hash[i] = _p_all_hashes_list[i];
+        }
+    }
+
+    function get_badge_type_details_hash(
+        uint256 _p_badge_type
+    ) public view returns (bytes memory badge_details_hash) {
+        // Do we have that badge?
+        require(
+            _badge_type_to_badge_details_hash[_p_badge_type].length > 0,
+            "DonthaveDetails"
+        );
+        badge_details_hash = _badge_type_to_badge_details_hash[_p_badge_type];
+    }
+
     function check_badges() external view onlyConsole returns (uint) {
         return 2;
     }
+
+    //// Give badge to customer, check if customer has specific badge
+    //// how many badges does customer hold,
+    function award_badge(
+        address customer,
+        uint256 _p_badge_type
+    ) external onlyConsole {}
+
+    function check_customer_badge(
+        uint256 _p_badge_type_to_check,
+        address customer
+    ) external view onlyConsole returns (bool _does_customer_have_badge) {}
+
+    function total_customer_held_badges(
+        address customer
+    ) external view onlyConsole returns (uint256 _p_total_held) {}
 }
