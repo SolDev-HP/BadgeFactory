@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
+import "./CampaignBase.sol";
 
 // LoyaltyBadges contract -> renamed to Badges, avoids confusion with LoyaltyConsole
 // Everything related to loyalty badges - owner, exchange, review
@@ -10,16 +11,9 @@ pragma solidity 0.8.20;
 // be businesses/brands can assign this badge as honor among their customers, or there are other use cases -
 // some known and some are yet to be tested.
 
-contract Badges {
+contract Badges is CampaignBase {
     // ------------- State Vars
-    address public campaign_owner;
-    bytes public campaign_details_hash;
-
     // ------------- Modifier
-    modifier onlyConsole() {
-        require(msg.sender == campaign_owner, "OnlyConsole!");
-        _;
-    }
 
     // Badges can be
     // - Lifetype validity, no expiry, can be used anytime
@@ -38,27 +32,16 @@ contract Badges {
         // We do this separately after construction happens
     }
 
-    function set_campaign_owner(address camp_owner) external {
-        // setup console as the owner so interactions can happen for that deployed campaign
-        // happens only once
-        require(campaign_owner == address(0x0), "ShouldBeEmpty");
-        campaign_owner = camp_owner;
-    }
-
-    // Allow setting campaign details
-    function set_campaign_details(
-        bytes memory camp_details
-    ) external onlyConsole {
-        campaign_details_hash = camp_details;
-    }
-
-    // basic getter for campaign details hash
-    function get_campaign_details()
+    // Loyalty Badges specific - for testing
+    function get_campaign_type_and_details()
         public
         view
-        returns (bytes memory camp_details_hash)
+        override
+        returns (bytes memory camp_details_hash, bytes memory campaign_type)
     {
+        // campaign_details_hash is set at construction time
         camp_details_hash = campaign_details_hash;
+        campaign_type = "Loyalty Badges";
     }
 
     function check_badges() external view onlyConsole returns (uint) {

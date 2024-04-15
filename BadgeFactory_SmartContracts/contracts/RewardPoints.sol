@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
+import "./CampaignBase.sol";
 
 // RewardPoints contract
 // Responsible for everything related to reward points - distribution/claims
@@ -17,13 +18,10 @@ pragma solidity 0.8.20;
 /// _is_cust_subscribed - will move to parent contract, it's crucial component for any campaign to make sure -
 ///    customer is subscribed because there are certain functions that can be done by customers and for that -
 ///    we need to have this modifier for basic check
-contract RewardPoints {
+contract RewardPoints is CampaignBase {
     // ------------- State Vars
-    address public campaign_owner_console;
     uint256 private _total_points;
     uint256 private _total_customers_counter;
-    // Contains IPFS hash of this campaign's details
-    bytes public campaign_details_hash;
 
     mapping(uint256 => address) private _cust_id_to_cust_address;
     mapping(address => bool) private _is_cust_subscribed;
@@ -34,10 +32,6 @@ contract RewardPoints {
     event RewardPointsGained(address _customer, uint256 _points);
 
     // ------------- Modifier
-    modifier onlyConsole() {
-        require(msg.sender == campaign_owner_console, "OnlyConsole!");
-        _;
-    }
 
     // Testing only
     modifier onlySelf(address customer) {
@@ -66,23 +60,6 @@ contract RewardPoints {
         // Deploy once but cloned as many times as required
     }
 
-    // Set campaign owner is also a functionality now, as construction is nothing but a rewards campaign
-    function set_campaign_owner(address camp_owner) external {
-        // setup console as the owner so interactions can happen for that deployed campaign
-        // happens only once
-        // @todo - this is a temp fix until I find a better one, just to make sure we dont keep it open
-        require(campaign_owner_console == address(0x0), "ShouldBeEmpty");
-        campaign_owner_console = camp_owner;
-    }
-
-    // Set campaign hash details
-    function set_campaign_details(
-        bytes memory camp_details
-    ) external onlyConsole {
-        campaign_details_hash = camp_details;
-        // emit that details have been changed
-    }
-
     // A simple public function to get details (metadata) of this campaign
     function get_campaign_details()
         public
@@ -90,6 +67,17 @@ contract RewardPoints {
         returns (bytes memory details_hash)
     {
         details_hash = campaign_details_hash;
+    }
+
+    // Something to override for basic checks
+    function get_campaign_type_and_details()
+        public
+        view
+        override
+        returns (bytes memory campaign_hash, bytes memory campaign_type)
+    {
+        campaign_hash = campaign_details_hash;
+        campaign_type = "Reward Points / (maybe) Air Miles";
     }
 
     // This can be done by customer themselves, but for now we keep
@@ -132,26 +120,29 @@ contract RewardPoints {
         no_of_subs = _total_customers_counter;
     }
 
-    function check_points(
+    // OnlyEntity can access any subscriber's points
+    function check_subscriber_points(
         address customer
     ) external view onlyConsole returns (uint256 total_points) {
         return _points_of_customer[customer];
     }
 
-    function check_my_points(
+    // Subscriber can only see their own points
+    function get_self_points(
         address customer
     ) external view onlySelf(customer) returns (uint256 total_points) {
         return _points_of_customer[customer];
     }
 
+    // Tester, remove in prod
     function check_owner() external view returns (address) {
-        return campaign_owner_console;
+        return campaign_owner;
     }
 
     function reward_points(
         address customer,
         uint256 _additional_points
-    ) external onlyConsole returns (uint256 customer_new_total) {
+    ) external onlyConsole {
         // Is this customer subscribed?
         require(_is_cust_subscribed[customer], "NotSubbed");
         // Reward customer with points
@@ -160,8 +151,6 @@ contract RewardPoints {
             _points_of_customer[customer] += _additional_points;
             // Increase total circulating points count
             _total_points += _additional_points;
-            // Returns customer's new points total
-            customer_new_total = _points_of_customer[customer];
         }
         emit RewardPointsGained(customer, _additional_points);
     }
@@ -169,7 +158,7 @@ contract RewardPoints {
     function redeem_points(
         address customer,
         uint256 _redeemed_points
-    ) external onlyConsole returns (uint256 customer_new_total) {
+    ) external onlyConsole {
         // Customer subscribed?
         require(_is_cust_subscribed[customer], "NotSubbed");
         // Customer redeems the points
@@ -179,8 +168,10 @@ contract RewardPoints {
         );
         require(_total_points >= _redeemed_points, "CantHappen");
         unchecked {
-            _points_of_customer[customer] -= _redeemed_points; // reduce customer's points, it can become 0
-            customer_new_total = _points_of_customer[customer]; // return new total balance
+            // reduce customer's points, it can become 0
+            _points_of_customer[customer] -= _redeemed_points;
+            // reduce total as well, bugfix
+            _total_points -= _redeemed_points;
         }
         emit RewardPointsRedeemed(customer, _redeemed_points);
     }

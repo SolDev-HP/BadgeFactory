@@ -148,6 +148,7 @@ contract BadgeFactory {
         assert(_console_addr != address(0));
         emit ConsoleCreated(_console_addr);
         // Setup deployer in loyaltyConsole
+        // Deployer will have better use in the future, for now, it's just a safeguard
         ILoyaltyConsole(_console_addr).set_campaign_deployer(_deployer_address);
         // Setup deployer to accept this console as accessor
         IDeployer(_deployer_address).change_accessor(_console_addr, true);

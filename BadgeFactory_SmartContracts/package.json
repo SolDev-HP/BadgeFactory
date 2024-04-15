@@ -1,4 +1,7 @@
 {
+  "name": "badgefactory",
+  "version": "0.0.1",
+  "license": "to SolDev-HP until otherwise metioned :D",
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
@@ -21,5 +24,7 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5"
+  },
+  "scripts": {
   }
 }
