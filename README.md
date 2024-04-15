@@ -31,20 +31,48 @@ IF want to run local IPFS daemon:
 On branch: feature_campaign_struct
 Reason: We need a generalized campaign details structure for reward points, loyalty badges, tickets, and coupon/discount codes. As I have following structure in place, I'll expand upon it and modify unittest data accordingly.
 
+All of this complexity will hide under a simple UI/UX of BadgeFactory that allows seamless deployment of any campaign in minutes. Just select the available and supported types, add details, deploy, and start using those campaigns.
+
 ```javascript
 const campaignDetails = {
-    campaign_id: Number(totalCampaigns) + 1, // Some identifier, for now we keep it total+1
-    campaign_type: [1...4], // type of campaign (selectable range [1, 4])
-    campaign_name: "Campaign Name", // bytes32, only 32 letters ascii
-    campaign_details: "Campaign Details", // bytes32, only 32 letters ascii
-    campaign_start_date: "block.timestamp?", // Starting datetime of Campaign
-    campaign_end_date: "block.timestamp?", // Campaign ending datetime
-    campaign_owner: address, // Which console deployed it
-    campaign_specific_data: {
-        reward_points_campaign: { },
-        _badges_campaign: { },
-        _tickets_campaign: { },
-        _codes_campaign: { },
+    _campaign_id: Number(totalCampaigns) + 1,    // Some identifier, for now we keep it total+1
+    _campaign_type: [1...4],                     // type of campaign (selectable range [1, 4])
+    _campaign_name: "Campaign Name",             // bytes32, only 32 letters ascii
+    _campaign_details: "Campaign Details",       // bytes32, only 32 letters ascii
+    _campaign_start_date: "block.timestamp?",    // Starting datetime of Campaign
+    _campaign_end_date: "block.timestamp?",      // Campaign ending datetime
+    _campaign_owner: address,                    // Which console deployed it
+    _campaign_specific_data: {
+    // Campaign specific data, only one of them will be active for any given campaign and its details
+    // This base structure will expand as new campaign types are added
+    // 
+        _reward_points_campaign: {
+            // how do you earn
+            // how do you redeem
+            // is expirable?
+            // is transferable?
+        },
+        _badges_campaign: {
+            // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
+            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+            // Badge Visibility (publicly visible to everyone or limited visibility)
+            // is Badge expirable
+            // is Badge Transferrable?
+        },
+        _tickets_campaign: {
+            // What are they for
+            // Expiry
+            // is Transferable?
+            // any other restrictions...
+        },
+        _codes_campaign: {
+            // What is it? Coupon code or discount code
+            // If coupon, how much discount does it apply
+            // If discount code, what discount that code relates to
+            // expiry,
+            // is Transferable?
+            // any other restrictions...
+        },
     }
     _campaign_active: true,                         // Is campaign currently active
 };
