@@ -120,18 +120,21 @@ contract RewardPoints is CampaignBase {
         no_of_subs = _total_customers_counter;
     }
 
-    function check_points(
+    // OnlyEntity can access any subscriber's points
+    function check_subscriber_points(
         address customer
     ) external view onlyConsole returns (uint256 total_points) {
         return _points_of_customer[customer];
     }
 
-    function check_my_points(
+    // Subscriber can only see their own points
+    function get_self_points(
         address customer
     ) external view onlySelf(customer) returns (uint256 total_points) {
         return _points_of_customer[customer];
     }
 
+    // Tester, remove in prod
     function check_owner() external view returns (address) {
         return campaign_owner;
     }
@@ -139,7 +142,7 @@ contract RewardPoints is CampaignBase {
     function reward_points(
         address customer,
         uint256 _additional_points
-    ) external onlyConsole returns (uint256 customer_new_total) {
+    ) external onlyConsole {
         // Is this customer subscribed?
         require(_is_cust_subscribed[customer], "NotSubbed");
         // Reward customer with points
@@ -148,8 +151,6 @@ contract RewardPoints is CampaignBase {
             _points_of_customer[customer] += _additional_points;
             // Increase total circulating points count
             _total_points += _additional_points;
-            // Returns customer's new points total
-            customer_new_total = _points_of_customer[customer];
         }
         emit RewardPointsGained(customer, _additional_points);
     }
@@ -157,7 +158,7 @@ contract RewardPoints is CampaignBase {
     function redeem_points(
         address customer,
         uint256 _redeemed_points
-    ) external onlyConsole returns (uint256 customer_new_total) {
+    ) external onlyConsole {
         // Customer subscribed?
         require(_is_cust_subscribed[customer], "NotSubbed");
         // Customer redeems the points
@@ -167,8 +168,10 @@ contract RewardPoints is CampaignBase {
         );
         require(_total_points >= _redeemed_points, "CantHappen");
         unchecked {
-            _points_of_customer[customer] -= _redeemed_points; // reduce customer's points, it can become 0
-            customer_new_total = _points_of_customer[customer]; // return new total balance
+            // reduce customer's points, it can become 0
+            _points_of_customer[customer] -= _redeemed_points;
+            // reduce total as well, bugfix
+            _total_points -= _redeemed_points;
         }
         emit RewardPointsRedeemed(customer, _redeemed_points);
     }

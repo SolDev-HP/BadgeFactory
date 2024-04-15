@@ -406,7 +406,6 @@ describe("LoyaltyConsole", function () {
             );
 
         await campaign_start.wait(1);
-        //console.log(campaign_start);
         // Total number of campaigns should increase after this
         const totalCampaignsNow = await consoleContract._total_campaigns();
         expect(Number(totalCampaignsNow)).to.equal(1);
@@ -418,6 +417,8 @@ describe("LoyaltyConsole", function () {
 
         // try to create new campaign_types and add them onto ipfs
         // how do you read them and what do they represent
+
+        // Get deployed campaign 1 here, and perform ops
     });
     // Next tests
     // interact_rewardpoints - subscribe a customer to a campaign
