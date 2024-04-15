@@ -24,7 +24,7 @@ contract LoyaltyConsole {
     // Only total, @todo add way to check support for given campaign type
     uint256 public total_supported_campaigns;
     // Home Address
-    address public _factory;
+    address private _factory;
     address private _campaigns_deployer;
 
     // Role mapper
@@ -41,7 +41,7 @@ contract LoyaltyConsole {
     // }
     // Campaign_Types camp_type_choice;
     mapping(uint256 => uint256) public campaign_type_to_deploy_count;
-    mapping(uint256 => address) public _campaign_type_to_implementation;
+    mapping(uint256 => address) private _campaign_type_to_implementation;
 
     // LoyaltyConsole:
     // Entity: deploy new campaigns, register new users, modify campaigns, remove campaigns
@@ -49,7 +49,7 @@ contract LoyaltyConsole {
 
     // Entity can deploy same campaign multiple times
     // record all deployments to keep track within this console
-    mapping(uint256 => address[]) public _campaign_type_to_list_of_deployed;
+    mapping(uint256 => address[]) private _campaign_type_to_list_of_deployed;
 
     // ------------- Constructor
     // Deploy with list of deployable + supported campaigns for this console
