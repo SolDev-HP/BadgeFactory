@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: SolDev-HP
 pragma solidity 0.8.20;
 import "./interfaces/ICampaignBase.sol";
+import "./interfaces/ILoyaltyConsole.sol";
 
 // Other validations can be added such as _Campaign_details check before add
 // Address check before add - parameter in set_campaign_owner
@@ -12,6 +13,8 @@ contract CampaignBase is ICampaignBase {
     address public campaign_owner;
     bytes public campaign_details_hash;
     uint public campaign_create_at;
+
+    event CampaignCreated(address _campaign_address);
 
     constructor() {
         // Not too serious use for now, if so, change block.timestamp to something else
@@ -39,6 +42,7 @@ contract CampaignBase is ICampaignBase {
         // we use a function that can - only once
         require(campaign_owner == address(0x0), "ShouldBeEmpty");
         campaign_owner = _campaign_owner;
+        emit CampaignCreated(address(this));
     }
 
     // Gets overridden by child campaign,

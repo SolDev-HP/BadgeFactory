@@ -278,7 +278,7 @@ describe("LoyaltyConsole", function () {
     });
 
     // It should allow deployment of only supported campaigns
-    it("Should allow deployment of only supported campaigns", async function () {
+    it("Should allow deployment of only supported campaigns, all campaigns are deployable if they are supported", async function () {
         // Prepare fixture
         const {
             badgefactory,
@@ -324,10 +324,11 @@ describe("LoyaltyConsole", function () {
 
         const campaignDetails_Badges = {
             _campaign_id: Number(totalCampaigns) + 1, //ethers.formatUnits(totalCampaigns),
-            _campaign_name: "XtraRewards",
-            _campaign_details: "Reward points for Xtra",
+            _campaign_name: "Anything Badges",
+            _campaign_details: "These are anything badges",
             _campaign_type: 2, // This can be bytes if we want string
             _campaign_active: true,
+            _badges_url: "https://google.com/icon.svg",
         };
 
         const campaignDetails_Tickets = {
@@ -336,6 +337,7 @@ describe("LoyaltyConsole", function () {
             _campaign_details: "Reward points for Xtra",
             _campaign_type: 3, // This can be bytes if we want string
             _campaign_active: true,
+            _tickets_expiry: 1902481752, //expiry in timestamp
         };
 
         // create json struct of var
@@ -366,8 +368,11 @@ describe("LoyaltyConsole", function () {
         const ipfs_link = process.env.IPFS_RPC;
         // Request
         const form_data = new FormData();
-        form_data.append("file", inmemfile1); // Pass created inmem file
-        const hash_of_campaignDetails = await axios
+
+        form_data.append("file1", inmemfile1); // Pass created inmem file
+        form_data.append("file2", inmemfile2);
+        form_data.append("file3", inmemfile3);
+        const hash_of_campaigns = await axios
             .post("http://127.0.0.1:5001/api/v0/add", form_data, {
                 headers: {
                     "Content-Disposition": "form-data",
@@ -375,18 +380,37 @@ describe("LoyaltyConsole", function () {
                 },
             })
             .then((resp) => {
-                return resp["data"]["Hash"];
+                // returned hash are in this formate
+                // {name,hash,size}{name,hash,size}
+                // to covert this into json, we need a comma between } and {
+                // this regex replacer does that and returns data in json format
+                const regex = /(?<=})[^\w]*{/g;
+                let data = resp["data"].replace(regex, ",{");
+                return JSON.parse("[" + data + "]");
             });
 
         // Now, validate hash with created campaign structure
-        const campaign_from_ipfs = await axios.get(
-            ipfs_link + hash_of_campaignDetails
+        const campaign_from_ipfs1_points = await axios.get(
+            ipfs_link + hash_of_campaigns[0]["Hash"]
         );
+        const campaign_from_ipfs2_badges = await axios.get(
+            ipfs_link + hash_of_campaigns[1]["Hash"]
+        );
+        const campaign_from_ipfs3_tickets = await axios.get(
+            ipfs_link + hash_of_campaigns[2]["Hash"]
+        );
+
         // Validate campaignData on ipfs
         //console.log(campaign_from_ipfs["data"]);
 
-        expect(JSON.stringify(campaign_from_ipfs["data"])).to.equal(
+        expect(JSON.stringify(campaign_from_ipfs1_points["data"])).to.equal(
             JSON.stringify(campaignDetails_RewardPoints)
+        );
+        expect(JSON.stringify(campaign_from_ipfs2_badges["data"])).to.equal(
+            JSON.stringify(campaignDetails_Badges)
+        );
+        expect(JSON.stringify(campaign_from_ipfs3_tickets["data"])).to.equal(
+            JSON.stringify(campaignDetails_Tickets)
         );
 
         // Deploy rewards points campaign with ipfs hash
@@ -395,7 +419,7 @@ describe("LoyaltyConsole", function () {
         await expect(
             consoleContract.start_campaign(
                 1,
-                new TextEncoder().encode(hash_of_campaignDetails)
+                new TextEncoder().encode(hash_of_campaigns[0]["Hash"])
             )
         ).to.be.revertedWith("EntityOnly");
 
@@ -403,23 +427,117 @@ describe("LoyaltyConsole", function () {
             .connect(brand1)
             .start_campaign(
                 1,
-                new TextEncoder().encode(hash_of_campaignDetails)
+                new TextEncoder().encode(hash_of_campaigns[0]["Hash"])
             );
 
         await campaign_start.wait(1);
         // Total number of campaigns should increase after this
-        const totalCampaignsNow = await consoleContract.total_campaigns();
+        let totalCampaignsNow = await consoleContract.total_campaigns();
         expect(Number(totalCampaignsNow)).to.equal(1);
+
+        const campaign_start_badges = await consoleContract
+            .connect(brand1)
+            .start_campaign(
+                2,
+                new TextEncoder().encode(hash_of_campaigns[1]["Hash"])
+            );
+
+        await campaign_start_badges.wait(1);
+        // Total number of campaigns should increase after this
+        totalCampaignsNow = await consoleContract.total_campaigns();
+        expect(Number(totalCampaignsNow)).to.equal(2);
+
+        const campaign_start_tickets = await consoleContract
+            .connect(brand1)
+            .start_campaign(
+                3,
+                new TextEncoder().encode(hash_of_campaigns[2]["Hash"])
+            );
+
+        await campaign_start_tickets.wait(1);
+        // Total number of campaigns should increase after this
+        totalCampaignsNow = await consoleContract.total_campaigns();
+        expect(Number(totalCampaignsNow)).to.equal(3);
+
+        // This should fail
+        await expect(
+            consoleContract.connect(brand1).start_campaign(
+                4, // Campaign type 4 - coupon codes - not supported
+                new TextEncoder().encode(hash_of_campaigns[2]["Hash"]) //reuse details hash
+            )
+        ).to.be.revertedWith("CampNotSupported");
 
         // Expect total supported campaign types to be 3
         const totalCampaignsSupported =
             await consoleContract.total_supported_campaigns();
         expect(Number(totalCampaignsSupported)).to.equal(3);
 
-        // try to create new campaign_types and add them onto ipfs
-        // how do you read them and what do they represent
-
         // Get deployed campaign 1 here, and perform ops
+        // const rewardpoints_address =
+        //     await consoleContract._campaign_type_to_list_of_deployed(1, 0); // get first contract in the list for now, it's the first campaign of reward points
+
+        // let rewardpoints_contractfactory = await ethers.getContractFactory(
+        //     "CampaignBase"
+        // );
+        // const rewardpoints_contract =
+        //     rewardpoints_contractfactory.attach(rewardpoints_address);
+
+        // // Cust 1 gets registered on loyaltyconsole
+        // let cust1_register_tx = await consoleContract
+        //     .connect(brand1)
+        //     .subscribe_to_loyalty_system(await cust1.getAddress());
+
+        // await cust1_register_tx.wait(1);
+
+        // // Give this customer 10000 reward points as welcome bonus
+        // // Customer is registered on loyalty console, but not on rewards system, observe
+        // let cust1_address = await cust1.getAddress();
+        // let give_reward_bonus = await consoleContract
+        //     .connect(brand1)
+        //     .interact_rewardpoints(
+        //         cust1_address, // give rewards points to this customer
+        //         10000, // amount of reward points
+        //         1, // what campaign type is this
+        //         1 // is allocation? Entity -> Customer
+        //     );
+        // await give_reward_bonus.wait(1);
+        // // validate customer has this balance 10000 in reward points
+        // let rpFactory = await ethers.getContractFactory("RewardPoints");
+        // let rpContract = rpFactory.attach(rewardpoints_address);
+        // await expect(
+        //     await rpContract.connect(cust1).get_self_points(cust1_address)
+        // ).to.be.equal(10000); // Customer balance is updated
+
+        /// Validates that each campaign is a different type by calling
+        /// base contract function overridden in all with their custom
+        /// values, if need to see it uncomment fact1, fact2, fact3 logging
+
+        // const val = await consoleContract._campaign_type_to_list_of_deployed(
+        //     1,
+        //     0
+        // );
+        // const val2 = await consoleContract._campaign_type_to_list_of_deployed(
+        //     2,
+        //     0
+        // );
+        // const val3 = await consoleContract._campaign_type_to_list_of_deployed(
+        //     3,
+        //     0
+        // );
+        // let fact1 = await ethers.getContractFactory("CampaignBase");
+        // const fact1con = fact1.attach(val);
+        // console.log(await fact1con.get_campaign_type_and_details());
+        // console.log(val);
+
+        // let fact2 = await ethers.getContractFactory("CampaignBase");
+        // const fact2con = fact2.attach(val2);
+        // console.log(await fact2con.get_campaign_type_and_details());
+        // console.log(val2);
+
+        // let fact3 = await ethers.getContractFactory("CampaignBase");
+        // const fact3con = fact3.attach(val3);
+        // console.log(await fact3con.get_campaign_type_and_details());
+        // console.log(val3);
 
         /**
         {
@@ -462,7 +580,103 @@ describe("LoyaltyConsole", function () {
     });
     // Next tests
     // interact_rewardpoints - subscribe a customer to a campaign
-    //      customer_details - [phone number, email, qrcode(todo), address]
     // interact_rewardpoints - Reward customer with points
+    it("Should allow Entity to deploy reward points campaign, Entity can subscribe customers for their loyalty system, Customer gain reward points", async function () {
+        // Prepare fixture
+        const {
+            badgefactory,
+            rewardpoints_campImpl,
+            badges_campImpl,
+            tickets_campImpl,
+            codes_campImpl,
+            loyaltyConsoleAddress,
+            factoryOwner,
+            brand1,
+            brand2,
+            cust1,
+            cust2,
+        } = await loadFixture(deployLoyaltyConsoleFixture);
+
+        // Get loyalty console contract
+        let loyaltyConsoleFactory = await ethers.getContractFactory(
+            "LoyaltyConsole"
+        );
+        const loyaltyConsoleContract = loyaltyConsoleFactory.attach(
+            loyaltyConsoleAddress
+        );
+
+        // Brand1 Deploys their Loyalty Console ------------------------------
+        // Deploy reward points
+        let deploy_rp_tx = await loyaltyConsoleContract
+            .connect(brand1)
+            .start_campaign(1, new TextEncoder().encode(0)); // Sending details as 0, nothing for now, just to test
+        await deploy_rp_tx.wait(1);
+
+        // If campaign starts, get the campaign address from loyalty console
+        let rp_contract_address =
+            await loyaltyConsoleContract._campaign_type_to_list_of_deployed(
+                1,
+                0
+            ); // Deployed type 1 - reward points, deployed position first (we deployed that above in start_campaign())
+        //console.log(`RewardPointsAddress: ${rp_contract_address}`);
+
+        let rewardpoints_contractfactory = await ethers.getContractFactory(
+            "RewardPoints"
+        );
+        const rewardpoints_contract =
+            rewardpoints_contractfactory.attach(rp_contract_address);
+
+        // Cust 1 gets registered on loyaltyconsole
+        let cust1_register_tx = await loyaltyConsoleContract
+            .connect(brand1)
+            .subscribe_to_loyalty_system(await cust1.getAddress());
+
+        await cust1_register_tx.wait(1);
+
+        let cust1_address = await cust1.getAddress();
+        // validate customer has 0 points before moving forward
+        // validate customer has this balance 10000 in reward points
+        await expect(
+            await rewardpoints_contract
+                .connect(cust1)
+                .get_self_points(cust1_address)
+        ).to.be.equal(0); // Customer balance is updated
+        // Give this customer 10000 reward points as welcome bonus
+        // Customer is registered on loyalty console, but not on rewards system, observe
+        let give_reward_bonus = await loyaltyConsoleContract
+            .connect(brand1)
+            .interact_rewardpoints(
+                cust1_address, // give rewards points to this customer
+                10000, // amount of reward points
+                1, // what campaign type is this
+                1 // is allocation? Entity -> Customer
+            );
+        await give_reward_bonus.wait(1);
+        // validate customer has this balance 10000 in reward points
+        await expect(
+            await rewardpoints_contract
+                .connect(cust1)
+                .get_self_points(cust1_address)
+        ).to.be.equal(10000); // Customer balance is updated
+    });
+    //      customer_details - [phone number, email, qrcode(todo), address]
+
     // interact_rewardpoints - Customer redeems their points for a purchase (init at brand/business front)
+    it("Should allow Entity to redeem customer's reward points upon their interaction (i.e. purchase, interaction, visit, anything deemed reward worthy)", async function () {
+        // Prepare fixture
+        const {
+            badgefactory,
+            rewardpoints_campImpl,
+            badges_campImpl,
+            tickets_campImpl,
+            codes_campImpl,
+            loyaltyConsoleAddress,
+            factoryOwner,
+            brand1,
+            brand2,
+            cust1,
+            cust2,
+        } = await loadFixture(deployLoyaltyConsoleFixture);
+        
+    });
 });

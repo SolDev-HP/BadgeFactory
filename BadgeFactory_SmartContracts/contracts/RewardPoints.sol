@@ -2,6 +2,8 @@
 pragma solidity 0.8.20;
 import "./CampaignBase.sol";
 
+//import "hardhat/console.sol";
+
 // RewardPoints contract
 // Responsible for everything related to reward points - distribution/claims
 /// @title RewardPoints smart contract
@@ -35,7 +37,8 @@ contract RewardPoints is CampaignBase {
 
     // Testing only
     modifier onlySelf(address customer) {
-        require(_is_cust_subscribed[customer], "UnSubbed");
+        bool is_cust = ILoyaltyConsole(campaign_owner).is_customer(customer);
+        require(is_cust, "UnSubbed");
         require(msg.sender == customer, "OnlyYours!");
         _;
     }
@@ -91,6 +94,16 @@ contract RewardPoints is CampaignBase {
     // For CampaignDetails struct, (future: Badges images/gifs(media), tickets media, Codes media) can be -
     // on public ipfs, they are for UI and doesn't contain actual operational data
     function subscribe_customer(address customer) external onlyConsole {
+        require(
+            ILoyaltyConsole(campaign_owner).is_customer(customer),
+            "NotSubbedonConsole!"
+        );
+        // console.log("What is hapnneing here");
+        // console.log(customer);
+        // console.log(ILoyaltyConsole(campaign_owner).is_customer(customer));
+        // If I keep total_cust_counter for reference with loyalty console data,
+        // this contract doesn't need _is_cust_subscribed anymore, just here, everywhere -
+        // else it's already replaced by a call to LoyaltyConsole.is_customer() function
         require(!_is_cust_subscribed[customer], "AlreadySubbed!");
         // Assign custid->address
         _cust_id_to_cust_address[_total_customers_counter] = customer;
@@ -144,7 +157,9 @@ contract RewardPoints is CampaignBase {
         uint256 _additional_points
     ) external onlyConsole {
         // Is this customer subscribed?
-        require(_is_cust_subscribed[customer], "NotSubbed");
+        //require(_is_cust_subscribed[customer], "NotSubbed");
+        bool is_cust = ILoyaltyConsole(campaign_owner).is_customer(customer);
+        require(is_cust, "NotSubbed");
         // Reward customer with points
         // Customer identifier required
         unchecked {
@@ -160,7 +175,8 @@ contract RewardPoints is CampaignBase {
         uint256 _redeemed_points
     ) external onlyConsole {
         // Customer subscribed?
-        require(_is_cust_subscribed[customer], "NotSubbed");
+        bool is_cust = ILoyaltyConsole(campaign_owner).is_customer(customer);
+        require(is_cust, "NotSubbed");
         // Customer redeems the points
         require(
             _points_of_customer[customer] >= _redeemed_points,

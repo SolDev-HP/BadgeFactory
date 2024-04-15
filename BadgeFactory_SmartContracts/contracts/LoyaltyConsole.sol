@@ -34,6 +34,7 @@ contract LoyaltyConsole {
     // This would change once we add Customer_data_hash, for now it'll work
     mapping(address => bool) public _is_address_Customer;
     // Supported campaigns - and where their clones are (Address)
+    mapping(address => bool) public is_address_Campaign;
     // enum Campaign_Types {
     //     REWARD_POINTS,
     //     BADGES,
@@ -50,7 +51,7 @@ contract LoyaltyConsole {
 
     // Entity can deploy same campaign multiple times
     // record all deployments to keep track within this console
-    mapping(uint256 => address[]) private _campaign_type_to_list_of_deployed;
+    mapping(uint256 => address[]) public _campaign_type_to_list_of_deployed;
 
     // Add customer subscription here, campaign interactions happen from
     // console (for now) anyway
@@ -96,6 +97,14 @@ contract LoyaltyConsole {
         require(_factory == msg.sender, "FactoryOnly!");
         _;
     }
+    // And campaign backcalling to validate customer?
+    // One place I can think of is where we call onlySelf() with custoemr-
+    // address. So we callback to validate that address, and only child-
+    // campaigns can do that
+    modifier roleCampaign() {
+        require(is_address_Campaign[msg.sender], "CampaignOnly!");
+        _;
+    }
 
     // -------------- External functions
     function set_campaign_deployer(
@@ -121,6 +130,13 @@ contract LoyaltyConsole {
     }
 
     // And later unsubscribe_from_loyalty_system()
+
+    // Check from campaign if current customer
+    function is_customer(
+        address customer
+    ) external view roleCampaign returns (bool) {
+        return _is_address_Customer[customer];
+    }
 
     // Deploying campaigns through console
     // I know it wont return anything, but currently declared
@@ -162,6 +178,8 @@ contract LoyaltyConsole {
         _campaign_type_to_list_of_deployed[p_campaign_type].push(
             address(_campaign_addr)
         );
+        // the address is now a campaign
+        is_address_Campaign[_campaign_addr] = true;
     }
 
     // Coming from BadgeFactory.sol - keep if needed
@@ -198,16 +216,16 @@ contract LoyaltyConsole {
         // If no points interaction (points are 0), subscribe
         if (points == 0) {
             // If we add a custoemr into reward points, add into loyaltyconsole
-            // This will change in later versions
-            _is_address_Customer[customer] = true;
+            // Subscribe to loyalty system as well, if not already
+            if (!_is_address_Customer[customer]) {
+                subscribe_to_loyalty_system(customer);
+                // This will change in later versions
+                _is_address_Customer[customer] = true;
+            }
             // This way, we allow customer to choose if they'd want to
             // participate in any given loyalty campaign. By default, they
             // are included, but they can interct with campaign and unsubscribe
             IRewardPoints(campAddr).subscribe_customer(customer);
-            // Subscribe to loyalty system as well, if not already
-            if (!_is_address_Customer[customer]) {
-                subscribe_to_loyalty_system(customer);
-            }
         } else {
             // if points are nonzero, it's an reward/redeem - reward_points
             if (_is_allocation) {

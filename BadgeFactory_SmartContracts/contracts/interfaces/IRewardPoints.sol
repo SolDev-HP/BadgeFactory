@@ -6,7 +6,7 @@ interface IRewardPoints {
     function subscribe_customer(address) external;
 
     // Reward Points Interactions
-    function reward_points(address, uint256) external returns (uint256);
+    function reward_points(address, uint256) external;
 
-    function redeem_points(address, uint256) external returns (uint256);
+    function redeem_points(address, uint256) external;
 }
