@@ -9,9 +9,4 @@ interface IRewardPoints {
     function reward_points(address, uint256) external returns (uint256);
 
     function redeem_points(address, uint256) external returns (uint256);
-
-    // Set campaign details - temporary - this should move to ICampaign
-    function set_campaign_owner(address) external;
-
-    function set_campaign_details(bytes memory) external;
 }

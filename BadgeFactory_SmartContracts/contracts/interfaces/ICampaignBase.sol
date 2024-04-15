@@ -21,7 +21,10 @@ pragma solidity 0.8.20;
 // So naturally related modifiers will switch to here instead of child campaigns
 
 interface ICampaignBase {
+    // Set campaign owner, campaign owner would be loyaltyconsole always
+    // but this happens inside campaign cloning and setup process
     function set_campaign_owner(address) external;
 
+    // Campaign details comes in as an ipfs hash
     function set_campaign_details(bytes memory) external;
 }

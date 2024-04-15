@@ -4,10 +4,10 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IDeployer.sol";
 import "./interfaces/ICampaignBase.sol";
 import "./interfaces/IRewardPoints.sol";
-// for type(campaign).creationCode
-import "./interfaces/IBadges.sol";
-import "./interfaces/ITickets.sol";
-import "./interfaces/ICodes.sol";
+
+// import "./interfaces/IBadges.sol";
+// import "./interfaces/ITickets.sol";
+// import "./interfaces/ICodes.sol";
 
 // Campaign types are:
 // 1 - Reward Points
