@@ -45,25 +45,55 @@ const campaignDetails = {
     _campaign_specific_data: {
     // Campaign specific data, only one of them will be active for any given campaign and its details
     // This base structure will expand as new campaign types are added
-    // 
+    //
         _reward_points_campaign: {
-            // how do you earn
+            // how do you earn? purchase, interaction, distribution
+            _earning_rules: {
+                // At present we allow redeem/reward or x amount of points
+                // assumption is 1:1, Entity decides how many points to assign for
+                // any given interaction or purchase or visit or anything reward worthy
+                _default_rate: 1,       // We may add customization to change this
+                _changers_updaters: {}, // Incase of custom reward points redeem/reward rule need
+            },
+            _welcome_bonus: 10000,       // If Entity would like to give them welcome bonus as soon as they(customers) subscribe or register themselves
+            _earning_ceiling: 5000000,   // any max amount customers can obtain before hiting ceiling
             // how do you redeem
+            _max_redeemable_at_once: 5000,  // Max in one interaction. can be 0 for any amount allowed
+            _redemption_option: {}, // Not need for now, may be prefix points->product kind of thing
             // is expirable?
+            _is_expirable: false,
+            _expiry: timestamp,
             // is transferable?
         },
         _badges_campaign: {
             // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
-            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+            _types_of_badges: 10,               // Number of different types of badges (in view and their utility decided by Entity)
+            _badges_details: [
+                // This will repeat for all types of badges
+                {
+                    _badge_for: "string",
+                    _badge_details: "",
+                    // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+                    _badge_view: img | svg | gif,
+                    _can_expire: true/false,
+                    _expiry: timestamp,
+                    _can_transfer: true/false,
+                    // can add more functional details but these are mainly for UI/UX
+                    // smartcontracts are only handling the hash of that ipfs data
+                    // This can change based on which details are important enough to be
+                    // kept in the contract itself, for example - timestamps seem they belong on
+                    // contract as they can be used for verification. And more..
+                },
+            ],
             // Badge Visibility (publicly visible to everyone or limited visibility)
-            // is Badge expirable
-            // is Badge Transferrable?
+            _badge_visibility: "string",
         },
         _tickets_campaign: {
             // What are they for
             // Expiry
             // is Transferable?
             // any other restrictions...
+            // Not considering for this hackathon, but will add once it's done
         },
         _codes_campaign: {
             // What is it? Coupon code or discount code
@@ -71,7 +101,8 @@ const campaignDetails = {
             // If discount code, what discount that code relates to
             // expiry,
             // is Transferable?
-            // any other restrictions...
+            // any other restrictions..
+            // Not considering for this hackathon, but will add once it's done.
         },
     }
     _campaign_active: true,                         // Is campaign currently active
