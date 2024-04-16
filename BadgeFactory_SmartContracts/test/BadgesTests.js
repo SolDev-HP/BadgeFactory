@@ -37,6 +37,7 @@ const axios = require("axios");
 const {
     loadFixture,
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
+const { url } = require("inspector");
 
 describe("Badges-Tests", function () {
     // Fixture of LoyaltyConsole
@@ -170,50 +171,54 @@ describe("Badges-Tests", function () {
         const img2_entity_badge = "../assets/badges/entity_badge.png";
         const img3_subscribed_badge = "../assets/badges/subscribed_badge.png";
 
-        // try {
-        //     const img1_file = fs.readFileSync(img1_cust_badge);
-        //     const img2_file = fs.readFileSync(img2_entity_badge);
-        //     const img3_file = fs.readFileSync(img3_subscribed_badge);
-        // } catch (err) {
-        //     console.error(err);
-        // }
         // Upload these three images to ipfs local, and use hash in preparing campaignDetails structure
 
-        // create a blob
-        const img1_blob = new Blob(fs.readFileSync(img1_cust_badge), {
-            type: "image/png",
-        });
-        const img2_blob = new Blob(fs.readFileSync(img2_entity_badge), {
-            type: "image/png",
-        });
-        const img3_blob = new Blob(fs.readFileSync(img3_subscribed_badge), {
-            type: "image/png",
-        });
-
-        const inmem_imgfile1 = new File([img1_blob], "cust_badge_1.png");
-        const inmem_imgfile2 = new File([img2_blob], "entity_badge_1.png");
-        const inmem_imgfile3 = new File(
-            [img3_blob],
-            "newsletter_subscribed_badge_1.png"
+        // May be apply data chunking here and send chunks and stream back response from ipfs? @todo
+        // Takes way too long, but gets the point across, uploading png files as badges to ipfs -
+        // grab hashes to store in campaignData on campaign contract and loyaltyconsole
+        const inmem_imgfile1 = new File(
+            [fs.readFileSync(img1_cust_badge, { encoding: "base64" })],
+            "cust_badge_1.png",
+            {
+                type: "image/png",
+            }
         );
 
+        console.log(`File size of cust_badge: ${inmem_imgfile1.size}`);
+        const inmem_imgfile2 = new File(
+            [fs.readFileSync(img2_entity_badge, { encoding: "base64" })],
+            "entity_badge_1.png",
+            {
+                type: "image/png",
+            }
+        );
+        console.log(`File size of entity_badge: ${inmem_imgfile2.size}`);
+        const inmem_imgfile3 = new File(
+            [fs.readFileSync(img3_subscribed_badge, { encoding: "base64" })],
+            "newsletter_subscribed_badge_1.png",
+            {
+                type: "image/png",
+            }
+        );
+        console.log(`File size of subbed_badge: ${inmem_imgfile3.size}`);
         ///// Put these three images on ipfs running locally on kubo node
         // Put this to ipfs and get hash
         const ipfs_link = process.env.IPFS_RPC;
         // Request
         const form_data = new FormData();
 
-        form_data.append("file1", inmem_imgfile1); // Pass created inmem file
-        form_data.append("file2", inmem_imgfile2);
-        form_data.append("file3", inmem_imgfile3);
+        form_data.append("file", inmem_imgfile1); // Pass created inmem file
+        form_data.append("file", inmem_imgfile2);
+        form_data.append("file", inmem_imgfile3);
         const hash_of_campaigns = await axios
-            .post("http://127.0.0.1:5001/api/v0/add", form_data, {
+            .post("http://127.0.0.1:5001/api/v0/add?quieter=true", form_data, {
                 headers: {
                     "Content-Disposition": "form-data",
                     "Content-Type": "application/octet-stream",
                 },
             })
             .then((resp) => {
+                //console.log(resp);
                 // returned hash are in this formate
                 // {name,hash,size}{name,hash,size}
                 // to covert this into json, we need a comma between } and {
@@ -223,20 +228,37 @@ describe("Badges-Tests", function () {
                 return JSON.parse("[" + data + "]");
             });
 
-        // Now, validate hash with created campaign structure
-        // const campaign_from_ipfs1_points = await axios.get(
-        //     ipfs_link + hash_of_campaigns[0]["Hash"]
-        // );
-        // const campaign_from_ipfs2_badges = await axios.get(
-        //     ipfs_link + hash_of_campaigns[1]["Hash"]
-        // );
-        // const campaign_from_ipfs3_tickets = await axios.get(
-        //     ipfs_link + hash_of_campaigns[2]["Hash"]
-        // );
-
         console.log(`Cust Badge At: ${hash_of_campaigns[0]["Hash"]}`);
         console.log(`Entity Badge At: ${hash_of_campaigns[1]["Hash"]}`);
         console.log(`Subscribed Badge At: ${hash_of_campaigns[2]["Hash"]}`);
+
+        // Get a random file back from ipfs to validate uploaded data/image/media
+        const random_file = await fetch(
+            ipfs_link + hash_of_campaigns[0]["Hash"]
+        )
+            // .then((respdata) =>
+            //     console.log(respdata.headers.get("content-type"))
+            // )
+            .then((repsdata) => repsdata.text())
+            .then(
+                (respdata) =>
+                    new File([atob(respdata)], "some_badge.png", {
+                        type: "image/png",
+                    })
+            );
+        // .then((blobfile) => {
+        //     console.log(blobfile);
+        // });
+        //console.log(random_file);
+        const rnd_cust_badge = "../assets/badges/some_badge.png";
+        /// or add "==" at end?
+        //var imgbuff = (await random_file.arrayBuffer()).toString();
+        console.log(`File size : ${random_file.size}`);
+        fs.writeFileSync(
+            rnd_cust_badge,
+            Buffer.from(await random_file.arrayBuffer())
+        );
+        // Validating image
 
         // const campaignDetails = {
         //     _campaign_id: Number(totalCampaigns), // Some identifier, for now we keep it total

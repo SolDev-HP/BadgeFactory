@@ -40,6 +40,9 @@ IF want to run local IPFS daemon:
    $> sudo ./install.sh
    # once it has been installed
    $> ipfs daemon --offline
+   # If need to run with debug logs of internal tx at kubo node
+   # during storing campaigndata struct, and reading for different campaing types
+   $> IPFS_LOGGING=debug ipfs daemon --offline
    # run offline daemon - it will start following things
    # ...
    # Swarm not listening, running in offline mode.
