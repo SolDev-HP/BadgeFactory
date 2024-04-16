@@ -141,8 +141,15 @@ describe("Badges-Tests", function () {
     it("LoyaltyConsole is deployed by an Entity(brand/business/project), no campaigns exist yet", async function () {
         // Load fixture here
         //-----------------
-        const { badgefactory_contract, loyaltyconsole_contract, ...args } =
-            await loadFixture(deployLoyaltyConsoleFixture);
+        const {
+            badgefactory_contract,
+            loyaltyconsole_contract,
+            factoryOwner,
+            entity1,
+            entity2,
+            cust1,
+            cust2,
+        } = await loadFixture(deployLoyaltyConsoleFixture);
         //console.log(await badgeFactory_contract.getAddress());
         // No. of deployed campaign should be 0 at this time
         const totalCampaigns = await loyaltyconsole_contract.total_campaigns();
@@ -150,11 +157,18 @@ describe("Badges-Tests", function () {
     });
 
     // Check if loyaltyconsole allows entity1 to deploy badges campaign
-    it("Should allow an Entity to deploy Badges campaign", async function () {
+    it("Should allow an Entity to deploy Badges campaign, verify total types of badges, their data, and campaigndetails hash data", async function () {
         // Load fixture here
         //-----------------
-        const { badgefactory_contract, loyaltyconsole_contract, ...args } =
-            await loadFixture(deployLoyaltyConsoleFixture);
+        const {
+            badgefactory_contract,
+            loyaltyconsole_contract,
+            factoryOwner,
+            entity1,
+            entity2,
+            cust1,
+            cust2,
+        } = await loadFixture(deployLoyaltyConsoleFixture);
         //console.log(await badgeFactory_contract.getAddress());
         // No. of deployed campaign should be 0 at this time
         const totalCampaigns = await loyaltyconsole_contract.total_campaigns();
@@ -183,7 +197,7 @@ describe("Badges-Tests", function () {
             }
         );
 
-        console.log(`File size of cust_badge: ${inmem_imgfile1.size}`);
+        //console.log(`File size of cust_badge: ${inmem_imgfile1.size}`);
         const inmem_imgfile2 = new File(
             [fs.readFileSync(img2_entity_badge, { encoding: "base64" })],
             "entity_badge_1.png",
@@ -191,7 +205,7 @@ describe("Badges-Tests", function () {
                 type: "image/png",
             }
         );
-        console.log(`File size of entity_badge: ${inmem_imgfile2.size}`);
+        //console.log(`File size of entity_badge: ${inmem_imgfile2.size}`);
         const inmem_imgfile3 = new File(
             [fs.readFileSync(img3_subscribed_badge, { encoding: "base64" })],
             "newsletter_subscribed_badge_1.png",
@@ -199,7 +213,7 @@ describe("Badges-Tests", function () {
                 type: "image/png",
             }
         );
-        console.log(`File size of subbed_badge: ${inmem_imgfile3.size}`);
+        //console.log(`File size of subbed_badge: ${inmem_imgfile3.size}`);
         ///// Put these three images on ipfs running locally on kubo node
         // Put this to ipfs and get hash
         const ipfs_link = process.env.IPFS_RPC;
@@ -209,7 +223,7 @@ describe("Badges-Tests", function () {
         form_data.append("file", inmem_imgfile1); // Pass created inmem file
         form_data.append("file", inmem_imgfile2);
         form_data.append("file", inmem_imgfile3);
-        const hash_of_campaigns = await axios
+        const hashes_of_badges_data = await axios
             .post(
                 "http://127.0.0.1:5001/api/v0/add?chunker=buzhash",
                 form_data,
@@ -221,7 +235,6 @@ describe("Badges-Tests", function () {
                 }
             )
             .then((resp) => {
-                //console.log(resp);
                 // returned hash are in this formate
                 // {name,hash,size}{name,hash,size}
                 // to covert this into json, we need a comma between } and {
@@ -231,77 +244,190 @@ describe("Badges-Tests", function () {
                 return JSON.parse("[" + data + "]");
             });
 
-        console.log(`Cust Badge At: ${hash_of_campaigns[0]["Hash"]}`);
-        console.log(`Entity Badge At: ${hash_of_campaigns[1]["Hash"]}`);
-        console.log(`Subscribed Badge At: ${hash_of_campaigns[2]["Hash"]}`);
+        // console.log(`Cust Badge At: ${hashes_of_badges_data[0]["Hash"]}`);
+        // console.log(`Entity Badge At: ${hashes_of_badges_data[1]["Hash"]}`);
+        // console.log(`Subscribed Badge At: ${hashes_of_badges_data[2]["Hash"]}`);
 
         // Get any file back from ipfs to validate uploaded data/image/media
         const random_file = await axios
             .post(
                 "http://127.0.0.1:5001/api/v0/cat?arg=" +
-                    hash_of_campaigns[0]["Hash"]
+                    hashes_of_badges_data[0]["Hash"]
                 //"&output=some_badge.png"
             )
             .then((resp) => resp.data);
 
         const rnd_cust_badge = "../assets/badges/some_badge.png";
-        /// or add "==" at end?
-        //var imgbuff = (await random_file.arrayBuffer()).toString();
-        //console.log(`File size : ${random_file.size}`);
 
         // Recovery is done
         fs.writeFileSync(rnd_cust_badge, Buffer.from(random_file, "base64"));
-        // Validating image
+        // Badge retrieval validated
 
-        // const campaignDetails = {
-        //     _campaign_id: Number(totalCampaigns), // Some identifier, for now we keep it total
-        //     _campaign_type: 2, // type of campaign - badges
-        //     _campaign_name: "BadgeFactory Badges", // bytes32, only 32 letters ascii
-        //     _campaign_details: "to access services", // bytes32, only 32 letters ascii
-        //     _campaign_owner: await loyaltyconsole_contract.getAddress(), // Which console deployed it
-        //     _campaign_specific_data: {
-        //         _badges_campaign: {
-        //             // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
-        //             _types_of_badges: 3, // Number of different types of badges (in view and their utility decided by Entity)
-        //             _badges_details: [
-        //                 // This will repeat for all types of badges
-        //                 // First badge - newsletter subscription
-        //                 {
-        //                     _badge_for: "NewsletterSub",
-        //                     _badge_details: "receive newsletters",
-        //                     // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
-        //                     _badge_view: "png", //img | svg | gif,
-        //                     _badge_media_ipfs_hash:
-        //                         "img3_subscribed_badge_hash",
-        //                     _can_expire: false,
-        //                     _can_transfer: false,
-        //                 },
-        //                 // Second badge - register as Entity
-        //                 {
-        //                     _badge_for: "Entity",
-        //                     _badge_details: "subscribed to BadgeFactory",
-        //                     // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
-        //                     _badge_view: "png", //img | svg | gif,
-        //                     _badge_media_ipfs_hash: "img2_entity_badge_hash",
-        //                     _can_expire: false,
-        //                     _can_transfer: false,
-        //                 },
-        //                 // Third badge - register as Custoemr
-        //                 {
-        //                     _badge_for: "Customer",
-        //                     _badge_details: "subscribed to BadgeFactory",
-        //                     // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
-        //                     _badge_view: "png", //img | svg | gif,
-        //                     _badge_media_ipfs_hash: "img1_cust_badge_hash",
-        //                     _can_expire: false,
-        //                     _can_transfer: false,
-        //                 },
-        //             ],
-        //             // Badge Visibility (publicly visible to everyone or limited visibility)
-        //             _is_public_visible: true,
-        //         },
-        //     },
-        //     _campaign_active: true, // Is campaign currently active
-        // };
+        // Set the main campaign details into campaignbase
+        // Set other campaign badge
+        const campaignDetails = {
+            _campaign_id: Number(totalCampaigns), // Some identifier, for now we keep it total
+            _campaign_type: 2, // type of campaign - badges
+            _campaign_name: "BadgeFactory Badges", // bytes32, only 32 letters ascii
+            _campaign_details: "to access services", // bytes32, only 32 letters ascii
+            _campaign_owner: await loyaltyconsole_contract.getAddress(), // Which console deployed it
+            _campaign_specific_data: {
+                _badges_campaign: {
+                    // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
+                    _types_of_badges: 3, // Number of different types of badges (in view and their utility decided by Entity)
+                    _badges_details: [
+                        // This will repeat for all types of badges
+                        // First badge - newsletter subscription
+                        {
+                            _badge_for: "NewsletterSub",
+                            _badge_details: "receive newsletters",
+                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+                            _badge_view: "png", //img | svg | gif,
+                            _badge_media_ipfs_hash:
+                                hashes_of_badges_data[2]["Hash"],
+                            _can_expire: false,
+                            _can_transfer: false,
+                        },
+                        // Second badge - register as Entity
+                        {
+                            _badge_for: "Entity",
+                            _badge_details: "subscribed to BadgeFactory",
+                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+                            _badge_view: "png", //img | svg | gif,
+                            _badge_media_ipfs_hash:
+                                hashes_of_badges_data[1]["Hash"],
+                            _can_expire: false,
+                            _can_transfer: false,
+                        },
+                        // Third badge - register as Custoemr
+                        {
+                            _badge_for: "Customer",
+                            _badge_details: "subscribed to BadgeFactory",
+                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+                            _badge_view: "png", //img | svg | gif,
+                            _badge_media_ipfs_hash:
+                                hashes_of_badges_data[0]["Hash"],
+                            _can_expire: false,
+                            _can_transfer: false,
+                        },
+                    ],
+                    // Badge Visibility (publicly visible to everyone or limited visibility)
+                    _is_public_visible: true,
+                },
+            },
+            _campaign_active: true, // Is campaign currently active
+        };
+
+        ///// CampaignDetailds/CampaignData hash is always parent
+        ///// Remaining comes in the list afterwards
+        let json_campaign_details = JSON.stringify(campaignDetails);
+        const file_of_json = new Blob([json_campaign_details], {
+            type: "application/json",
+        });
+        const in_mem_file_of_json = new File(
+            [file_of_json],
+            "campaign_details.json"
+        );
+
+        // Request
+        const badges_campaign_details_form_data = new FormData();
+
+        badges_campaign_details_form_data.append("file", in_mem_file_of_json); // Pass created inmem file
+        // push campaign details onto ipfs and place that hash
+        // at the top of the list hashes_of_badges_data
+        const hash_of_campaignDetails = await axios
+            .post(
+                "http://127.0.0.1:5001/api/v0/add",
+                badges_campaign_details_form_data,
+                {
+                    headers: {
+                        "Content-Disposition": "form-data",
+                        "Content-Type": "application/octet-stream",
+                    },
+                }
+            )
+            .then((resp) => {
+                return resp["data"]["Hash"];
+            });
+        //console.log(`Hash OF CampaignDetails: ${hash_of_campaignDetails}`);
+        // Start campaign = Badges
+        // 3 badges with their hashes [1, 2, 3]
+        // campaignData structure ready
+        let start_campaign_tx = await loyaltyconsole_contract
+            .connect(entity1)
+            .start_campaign(2, [
+                new TextEncoder().encode(hash_of_campaignDetails),
+                new TextEncoder().encode(hashes_of_badges_data[0]["Hash"]),
+                new TextEncoder().encode(hashes_of_badges_data[1]["Hash"]),
+                new TextEncoder().encode(hashes_of_badges_data[2]["Hash"]),
+            ]);
+
+        start_campaign_tx.wait(1);
+        // Campaign count should increase
+        let total_campaigns_now =
+            await loyaltyconsole_contract.total_campaigns();
+        expect(total_campaigns_now).to.equal(1);
+        // verify that there are 3 types of badges for currently deployed campaign
+        // Get campaign deployed address
+        // CampaignType: 2, among list of badge campaigns deployed which contract: first one, at index zero
+        let badges_camp_address =
+            await loyaltyconsole_contract._campaign_type_to_list_of_deployed(
+                2,
+                0
+            );
+        let badges_camp_factory = await ethers.getContractFactory("Badges");
+        let badges_camp_contract =
+            badges_camp_factory.attach(badges_camp_address);
+
+        let total_badges_now =
+            await badges_camp_contract.total_types_of_badges();
+        console.log(`Total Types of Badges: ${total_badges_now}`);
+
+        let details_hash_badge1 =
+            await badges_camp_contract.get_badge_type_details_hash(1);
+        let details_hash_badge2 =
+            await badges_camp_contract.get_badge_type_details_hash(2);
+        let details_hash_badge3 =
+            await badges_camp_contract.get_badge_type_details_hash(3);
+
+        // BadgeType=>BadgeDetailsHash, Hash is sent as TextEncoded(),
+        // received should be decoded to get original back, once we get original, verify that with hashes that we received
+        // from ipfs while uploading == hashes_of_badges_data
+        const fromHexString = (hexString) =>
+            Uint8Array.from(
+                hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
+            );
+        //console.log(fromHexString(details_hash_badge1));
+
+        let decoder = new TextDecoder();
+        // why substring(2)? to remove 0x from hash that we received from contract
+        expect(
+            decoder.decode(fromHexString(details_hash_badge1.substring(2)))
+        ).to.equal(hashes_of_badges_data[0]["Hash"]);
+        expect(
+            decoder.decode(fromHexString(details_hash_badge2.substring(2)))
+        ).to.equal(hashes_of_badges_data[1]["Hash"]);
+        expect(
+            decoder.decode(fromHexString(details_hash_badge3.substring(2)))
+        ).to.equal(hashes_of_badges_data[2]["Hash"]);
+        // Badges Campaign started now with 3 badges types
+
+        // validate whole campaigndata hash
+        let campaign_datahash_bytes =
+            await badges_camp_contract.campaign_details_hash();
+        //console.log(campaign_datahash_bytes);
+        let campaign_datahash_ipfs = decoder.decode(
+            fromHexString(campaign_datahash_bytes.substring(2))
+        );
+
+        const campaign_from_ipfs = await axios.get(
+            ipfs_link + campaign_datahash_ipfs
+        );
+
+        //console.log(JSON.stringify(campaign_from_ipfs.data));
+        expect(JSON.stringify(campaign_from_ipfs.data)).to.equal(
+            JSON.stringify(campaignDetails)
+        );
+        // Validate everything and fix distribute/redeem/use/etc functionality
     });
 });

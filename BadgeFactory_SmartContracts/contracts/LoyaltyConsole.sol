@@ -142,6 +142,9 @@ contract LoyaltyConsole {
     // Deploying campaigns through console
     // I know it wont return anything, but currently declared
     // return var is reused within the function, so I'm keeping it until next Refactor comes @todo
+
+    // pCampaign_details_hash[0] is always CampaignData struct
+    // pCampaign_details_hash[1...N] are badges/tickets/coupons depending on campaign type
     function start_campaign(
         uint p_campaign_type,
         bytes[] memory p_campaign_details_hash
@@ -176,11 +179,15 @@ contract LoyaltyConsole {
         if (p_campaign_details_hash.length > 1) {
             // we verified that hashs array contain atleast one element
             // Set total_badges_types first
+            // Not checking campaign_type for now as the only other type is badges
+            // tickets and codes are still in skeleton stage, so this will change when
+            // those are implemented like rewardpoints and badges campaigns contract : @todo
             IBadges(_campaign_addr).set_total_badges_types(
-                p_campaign_details_hash.length
+                p_campaign_details_hash.length - 1 // As first hash is parent hash - CampaignData
+                // Second onwards are badges/or any other that require multiple file hashes
             );
             // Then setup all badges types with their corresponding details_hash in the list
-            IBadges(_campaign_addr).set_badges_details_hashes(
+            IBadges(_campaign_addr).set_all_badges_details_hashes(
                 p_campaign_details_hash
             );
         }

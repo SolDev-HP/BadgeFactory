@@ -26,6 +26,8 @@ contract Badges is CampaignBase {
     mapping(uint256 => bytes) private _badge_type_to_badge_details_hash;
 
     // Badgetype -> visibility (for all customers) - So by default visibility is public
+    // badgetype starts at 1
+    // 0 is for campaign_details_hash in parent
     mapping(uint256 => bool) private _badge_type_to_is_privately_visible_only;
 
     // ------------- Modifier
@@ -75,10 +77,12 @@ contract Badges is CampaignBase {
         // Has to make sure, total_badges_types == length of p_hashes_list
         require(total_types_of_badges > 0, "0BadgeTypesSet");
         require(
-            _p_all_hashes_list.length == total_types_of_badges,
+            _p_all_hashes_list.length - 1 == total_types_of_badges, // We're sending hashes[1...onwards]
             "MoreHashesThanSupported"
         );
         // If title BadgeDetails hasn't been set in super()
+        // This will be
+
         if (campaign_details_hash.length == 0) {
             campaign_details_hash = _p_all_hashes_list[0];
         }
@@ -87,7 +91,7 @@ contract Badges is CampaignBase {
         // Supports type 1,2,3 and has set hash details for only 1 -
         // 2 and 3 can be empty (set 0x0 in list) and that's okay,
         // they can recall this to update hash with the new one
-        for (uint i = 0; i < total_types_of_badges; ++i) {
+        for (uint i = 1; i <= total_types_of_badges; ++i) {
             // Don;t clean up, update the necessary one only
             if (_p_all_hashes_list[i].length == 0) {
                 continue;
@@ -96,7 +100,7 @@ contract Badges is CampaignBase {
             }
             // Non zero hash, update current hash associated with hashtype
             // hashtype is p_all_hashes_list indirect index
-            // 0 type is first badge
+            // badgetype starts at 1 - 0 is always parent campaignHash
             // 1 type is second badge and so on...
             _badge_type_to_badge_details_hash[i] = _p_all_hashes_list[i];
         }

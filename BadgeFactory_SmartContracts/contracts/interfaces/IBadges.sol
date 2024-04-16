@@ -10,7 +10,7 @@ interface IBadges {
     // These are implemented as consoleOnly() callable functions
     function set_total_badges_types(uint256) external;
 
-    function set_badges_details_hashes(bytes[] memory) external;
+    function set_all_badges_details_hashes(bytes[] memory) external;
 
     function get_badge_type_details_hash(
         uint256

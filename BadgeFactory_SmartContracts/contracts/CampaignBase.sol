@@ -31,6 +31,7 @@ contract CampaignBase is ICampaignBase {
         bytes memory _campaign_details
     ) external onlyConsole {
         // Make sure only console can call - explain why @todo
+        // campaign_details_hash - contains CampaignData struct hash
         campaign_details_hash = _campaign_details;
     }
 
