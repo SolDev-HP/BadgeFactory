@@ -37,7 +37,6 @@ const axios = require("axios");
 const {
     loadFixture,
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
-const { url } = require("inspector");
 
 describe("Badges-Tests", function () {
     // Fixture of LoyaltyConsole
@@ -211,12 +210,16 @@ describe("Badges-Tests", function () {
         form_data.append("file", inmem_imgfile2);
         form_data.append("file", inmem_imgfile3);
         const hash_of_campaigns = await axios
-            .post("http://127.0.0.1:5001/api/v0/add?quieter=true", form_data, {
-                headers: {
-                    "Content-Disposition": "form-data",
-                    "Content-Type": "application/octet-stream",
-                },
-            })
+            .post(
+                "http://127.0.0.1:5001/api/v0/add?chunker=buzhash",
+                form_data,
+                {
+                    headers: {
+                        "Content-Disposition": "form-data",
+                        "Content-Type": "application/octet-stream",
+                    },
+                }
+            )
             .then((resp) => {
                 //console.log(resp);
                 // returned hash are in this formate
@@ -232,32 +235,22 @@ describe("Badges-Tests", function () {
         console.log(`Entity Badge At: ${hash_of_campaigns[1]["Hash"]}`);
         console.log(`Subscribed Badge At: ${hash_of_campaigns[2]["Hash"]}`);
 
-        // Get a random file back from ipfs to validate uploaded data/image/media
-        const random_file = await fetch(
-            ipfs_link + hash_of_campaigns[0]["Hash"]
-        )
-            // .then((respdata) =>
-            //     console.log(respdata.headers.get("content-type"))
-            // )
-            .then((repsdata) => repsdata.text())
-            .then(
-                (respdata) =>
-                    new File([atob(respdata)], "some_badge.png", {
-                        type: "image/png",
-                    })
-            );
-        // .then((blobfile) => {
-        //     console.log(blobfile);
-        // });
-        //console.log(random_file);
+        // Get any file back from ipfs to validate uploaded data/image/media
+        const random_file = await axios
+            .post(
+                "http://127.0.0.1:5001/api/v0/cat?arg=" +
+                    hash_of_campaigns[0]["Hash"]
+                //"&output=some_badge.png"
+            )
+            .then((resp) => resp.data);
+
         const rnd_cust_badge = "../assets/badges/some_badge.png";
         /// or add "==" at end?
         //var imgbuff = (await random_file.arrayBuffer()).toString();
-        console.log(`File size : ${random_file.size}`);
-        fs.writeFileSync(
-            rnd_cust_badge,
-            Buffer.from(await random_file.arrayBuffer())
-        );
+        //console.log(`File size : ${random_file.size}`);
+
+        // Recovery is done
+        fs.writeFileSync(rnd_cust_badge, Buffer.from(random_file, "base64"));
         // Validating image
 
         // const campaignDetails = {
