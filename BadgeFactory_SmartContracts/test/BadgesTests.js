@@ -29,7 +29,7 @@
 //         },
 //     _campaign_active: true,                         // Is campaign currently active
 // };
-
+const fs = require("fs");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { hardhatArguments } = require("hardhat");
@@ -166,53 +166,127 @@ describe("Badges-Tests", function () {
         // For this test, supported types of badges 3
         // 3 images included on campaign_data_hash
 
-        const campaignDetails = {
-            _campaign_id: Number(totalCampaigns), // Some identifier, for now we keep it total
-            _campaign_type: 2, // type of campaign - badges
-            _campaign_name: "BadgeFactory Badges", // bytes32, only 32 letters ascii
-            _campaign_details: "to access services", // bytes32, only 32 letters ascii
-            _campaign_owner: await loyaltyconsole_contract.getAddress(), // Which console deployed it
-            _campaign_specific_data: {
-                _badges_campaign: {
-                    // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
-                    _types_of_badges: 3, // Number of different types of badges (in view and their utility decided by Entity)
-                    _badges_details: [
-                        // This will repeat for all types of badges
-                        // First badge - newsletter subscription
-                        {
-                            _badge_for: "NewsletterSub",
-                            _badge_details: "receive newsletters",
-                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
-                            _badge_view: "image", //img | svg | gif,
-                            _can_expire: false,
-                            _can_transfer: false,
-                        },
-                        // Second badge - register as Entity
-                        {
-                            _badge_for: "Entity",
-                            _badge_details: "subscribed to BadgeFactory",
-                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
-                            _badge_view: "image", //img | svg | gif,
-                            _can_expire: false,
-                            _can_transfer: false,
-                        },
-                        // Third badge - register as Custoemr
-                        {
-                            _badge_for: "Customer",
-                            _badge_details: "subscribed to BadgeFactory",
-                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
-                            _badge_view: "image", //img | svg | gif,
-                            _can_expire: false,
-                            _can_transfer: false,
-                        },
-                    ],
-                    // Badge Visibility (publicly visible to everyone or limited visibility)
-                    _is_public_visible: true,
-                },
-            },
-            _campaign_active: true, // Is campaign currently active
-        };
+        const img1_cust_badge = "../assets/badges/customer_badge.png";
+        const img2_entity_badge = "../assets/badges/entity_badge.png";
+        const img3_subscribed_badge = "../assets/badges/subscribed_badge.png";
 
-        
+        // try {
+        //     const img1_file = fs.readFileSync(img1_cust_badge);
+        //     const img2_file = fs.readFileSync(img2_entity_badge);
+        //     const img3_file = fs.readFileSync(img3_subscribed_badge);
+        // } catch (err) {
+        //     console.error(err);
+        // }
+        // Upload these three images to ipfs local, and use hash in preparing campaignDetails structure
+
+        // create a blob
+        const img1_blob = new Blob(fs.readFileSync(img1_cust_badge), {
+            type: "image/png",
+        });
+        const img2_blob = new Blob(fs.readFileSync(img2_entity_badge), {
+            type: "image/png",
+        });
+        const img3_blob = new Blob(fs.readFileSync(img3_subscribed_badge), {
+            type: "image/png",
+        });
+
+        const inmem_imgfile1 = new File([img1_blob], "cust_badge_1.png");
+        const inmem_imgfile2 = new File([img2_blob], "entity_badge_1.png");
+        const inmem_imgfile3 = new File(
+            [img3_blob],
+            "newsletter_subscribed_badge_1.png"
+        );
+
+        ///// Put these three images on ipfs running locally on kubo node
+        // Put this to ipfs and get hash
+        const ipfs_link = process.env.IPFS_RPC;
+        // Request
+        const form_data = new FormData();
+
+        form_data.append("file1", inmem_imgfile1); // Pass created inmem file
+        form_data.append("file2", inmem_imgfile2);
+        form_data.append("file3", inmem_imgfile3);
+        const hash_of_campaigns = await axios
+            .post("http://127.0.0.1:5001/api/v0/add", form_data, {
+                headers: {
+                    "Content-Disposition": "form-data",
+                    "Content-Type": "application/octet-stream",
+                },
+            })
+            .then((resp) => {
+                // returned hash are in this formate
+                // {name,hash,size}{name,hash,size}
+                // to covert this into json, we need a comma between } and {
+                // this regex replacer does that and returns data in json format
+                const regex = /(?<=})[^\w]*{/g;
+                let data = resp["data"].replace(regex, ",{");
+                return JSON.parse("[" + data + "]");
+            });
+
+        // Now, validate hash with created campaign structure
+        // const campaign_from_ipfs1_points = await axios.get(
+        //     ipfs_link + hash_of_campaigns[0]["Hash"]
+        // );
+        // const campaign_from_ipfs2_badges = await axios.get(
+        //     ipfs_link + hash_of_campaigns[1]["Hash"]
+        // );
+        // const campaign_from_ipfs3_tickets = await axios.get(
+        //     ipfs_link + hash_of_campaigns[2]["Hash"]
+        // );
+
+        console.log(`Cust Badge At: ${hash_of_campaigns[0]["Hash"]}`);
+        console.log(`Entity Badge At: ${hash_of_campaigns[1]["Hash"]}`);
+        console.log(`Subscribed Badge At: ${hash_of_campaigns[2]["Hash"]}`);
+
+        // const campaignDetails = {
+        //     _campaign_id: Number(totalCampaigns), // Some identifier, for now we keep it total
+        //     _campaign_type: 2, // type of campaign - badges
+        //     _campaign_name: "BadgeFactory Badges", // bytes32, only 32 letters ascii
+        //     _campaign_details: "to access services", // bytes32, only 32 letters ascii
+        //     _campaign_owner: await loyaltyconsole_contract.getAddress(), // Which console deployed it
+        //     _campaign_specific_data: {
+        //         _badges_campaign: {
+        //             // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
+        //             _types_of_badges: 3, // Number of different types of badges (in view and their utility decided by Entity)
+        //             _badges_details: [
+        //                 // This will repeat for all types of badges
+        //                 // First badge - newsletter subscription
+        //                 {
+        //                     _badge_for: "NewsletterSub",
+        //                     _badge_details: "receive newsletters",
+        //                     // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+        //                     _badge_view: "png", //img | svg | gif,
+        //                     _badge_media_ipfs_hash:
+        //                         "img3_subscribed_badge_hash",
+        //                     _can_expire: false,
+        //                     _can_transfer: false,
+        //                 },
+        //                 // Second badge - register as Entity
+        //                 {
+        //                     _badge_for: "Entity",
+        //                     _badge_details: "subscribed to BadgeFactory",
+        //                     // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+        //                     _badge_view: "png", //img | svg | gif,
+        //                     _badge_media_ipfs_hash: "img2_entity_badge_hash",
+        //                     _can_expire: false,
+        //                     _can_transfer: false,
+        //                 },
+        //                 // Third badge - register as Custoemr
+        //                 {
+        //                     _badge_for: "Customer",
+        //                     _badge_details: "subscribed to BadgeFactory",
+        //                     // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+        //                     _badge_view: "png", //img | svg | gif,
+        //                     _badge_media_ipfs_hash: "img1_cust_badge_hash",
+        //                     _can_expire: false,
+        //                     _can_transfer: false,
+        //                 },
+        //             ],
+        //             // Badge Visibility (publicly visible to everyone or limited visibility)
+        //             _is_public_visible: true,
+        //         },
+        //     },
+        //     _campaign_active: true, // Is campaign currently active
+        // };
     });
 });
