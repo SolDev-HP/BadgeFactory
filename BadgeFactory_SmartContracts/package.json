@@ -32,6 +32,13 @@
     "compile": "yarn hardhat compile --force",
     "test": "yarn hardhat test",
     "testl2": "yarn hardhat test --network hardhat_morphl2_fork",
+    "testfactoryl2": "yarn hardhat test ./test/BadgeFactoryTests.js --network hardhat_morphl2_fork",
+    "testconsolel2": "yarn hardhat test ./test/LoyaltyConsoleTests.js --network hardhat_morphl2_fork",
+    "testcampaignsl2": "yarn hardhat test ./test/BadgesTests.js ./test/BadgesTests.js ./test/TicketsTests.js ./test/CodesTests.js --network hardhat_morphl2_fork",
+    "testbadgesl2": "yarn hardhat test ./test/BadgesTests.js --network hardhat_morphl2_fork",
+    "testpointsl2": "yarn hardhat test ./test/BadgesTests.js --network hardhat_morphl2_fork",
+    "testticketsl2": "yarn hardhat test ./test/TicketsTests.js --network hardhat_morphl2_fork",
+    "testcodesl2": "yarn hardhat test ./test/CodesTests.js --network hardhat_morphl2_fork",
     "testwithgas": "REPORT_GAS=true yarn hardhat test",
     "testl2withgas": "REPORT_GAS=true yarn hardhat test --network hardhat_morphl2_fork",
     "sizes": "yarn hardhat size-contracts"
