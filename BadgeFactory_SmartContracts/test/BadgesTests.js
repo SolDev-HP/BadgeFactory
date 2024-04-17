@@ -430,4 +430,272 @@ describe("Badges-Tests", function () {
         );
         // Validate everything and fix distribute/redeem/use/etc functionality
     });
+
+    // Badges are now awardable
+    // Entity can award a badge to customer, and interact_badges() function is ready on console
+    // Check if loyaltyconsole allows entity1 to deploy badges campaign
+    it("Should allow entity to deploy badges, award badges to customers, no duplicate badges held by customer, total customer held badges verification", async function () {
+        // Load fixture here
+        //-----------------
+        const {
+            badgefactory_contract,
+            loyaltyconsole_contract,
+            factoryOwner,
+            entity1,
+            entity2,
+            cust1,
+            cust2,
+        } = await loadFixture(deployLoyaltyConsoleFixture);
+        //console.log(await badgeFactory_contract.getAddress());
+        // No. of deployed campaign should be 0 at this time
+        const totalCampaigns = await loyaltyconsole_contract.total_campaigns();
+        expect(totalCampaigns).to.equal(0);
+
+        const img1_cust_badge = "../assets/badges/customer_badge.png";
+        const img2_entity_badge = "../assets/badges/entity_badge.png";
+        const img3_subscribed_badge = "../assets/badges/subscribed_badge.png";
+
+        const inmem_imgfile1 = new File(
+            [fs.readFileSync(img1_cust_badge, { encoding: "base64" })],
+            "cust_badge_1.png",
+            {
+                type: "image/png",
+            }
+        );
+
+        //console.log(`File size of cust_badge: ${inmem_imgfile1.size}`);
+        const inmem_imgfile2 = new File(
+            [fs.readFileSync(img2_entity_badge, { encoding: "base64" })],
+            "entity_badge_1.png",
+            {
+                type: "image/png",
+            }
+        );
+        //console.log(`File size of entity_badge: ${inmem_imgfile2.size}`);
+        const inmem_imgfile3 = new File(
+            [fs.readFileSync(img3_subscribed_badge, { encoding: "base64" })],
+            "newsletter_subscribed_badge_1.png",
+            {
+                type: "image/png",
+            }
+        );
+        //console.log(`File size of subbed_badge: ${inmem_imgfile3.size}`);
+        ///// Put these three images on ipfs running locally on kubo node
+        // Put this to ipfs and get hash
+        const ipfs_link = process.env.IPFS_RPC;
+        // Request
+        const form_data = new FormData();
+
+        form_data.append("file", inmem_imgfile1); // Pass created inmem file
+        form_data.append("file", inmem_imgfile2);
+        form_data.append("file", inmem_imgfile3);
+        const hashes_of_badges_data = await axios
+            .post(
+                "http://127.0.0.1:5001/api/v0/add?chunker=buzhash",
+                form_data,
+                {
+                    headers: {
+                        "Content-Disposition": "form-data",
+                        "Content-Type": "application/octet-stream",
+                    },
+                }
+            )
+            .then((resp) => {
+                const regex = /(?<=})[^\w]*{/g;
+                let data = resp["data"].replace(regex, ",{");
+                return JSON.parse("[" + data + "]");
+            });
+
+        // Badge retrieval validated
+
+        // Set the main campaign details into campaignbase
+        // Set other campaign badge
+        const campaignDetails = {
+            _campaign_id: Number(totalCampaigns), // Some identifier, for now we keep it total
+            _campaign_type: 2, // type of campaign - badges
+            _campaign_name: "BadgeFactory Badges", // bytes32, only 32 letters ascii
+            _campaign_details: "to access services", // bytes32, only 32 letters ascii
+            _campaign_owner: await loyaltyconsole_contract.getAddress(), // Which console deployed it
+            _campaign_specific_data: {
+                _badges_campaign: {
+                    // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
+                    _types_of_badges: 3, // Number of different types of badges (in view and their utility decided by Entity)
+                    _badges_details: [
+                        // This will repeat for all types of badges
+                        // First badge - newsletter subscription
+                        {
+                            _badge_for: "NewsletterSub",
+                            _badge_details: "receive newsletters",
+                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+                            _badge_view: "png", //img | svg | gif,
+                            _badge_media_ipfs_hash:
+                                hashes_of_badges_data[2]["Hash"],
+                            _can_expire: false,
+                            _can_transfer: false,
+                        },
+                        // Second badge - register as Entity
+                        {
+                            _badge_for: "Entity",
+                            _badge_details: "subscribed to BadgeFactory",
+                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+                            _badge_view: "png", //img | svg | gif,
+                            _badge_media_ipfs_hash:
+                                hashes_of_badges_data[1]["Hash"],
+                            _can_expire: false,
+                            _can_transfer: false,
+                        },
+                        // Third badge - register as Custoemr
+                        {
+                            _badge_for: "Customer",
+                            _badge_details: "subscribed to BadgeFactory",
+                            // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+                            _badge_view: "png", //img | svg | gif,
+                            _badge_media_ipfs_hash:
+                                hashes_of_badges_data[0]["Hash"],
+                            _can_expire: false,
+                            _can_transfer: false,
+                        },
+                    ],
+                    // Badge Visibility (publicly visible to everyone or limited visibility)
+                    _is_public_visible: true,
+                },
+            },
+            _campaign_active: true, // Is campaign currently active
+        };
+
+        ///// CampaignDetailds/CampaignData hash is always parent
+        ///// Remaining comes in the list afterwards
+        let json_campaign_details = JSON.stringify(campaignDetails);
+        const file_of_json = new Blob([json_campaign_details], {
+            type: "application/json",
+        });
+        const in_mem_file_of_json = new File(
+            [file_of_json],
+            "campaign_details.json"
+        );
+
+        // Request
+        const badges_campaign_details_form_data = new FormData();
+
+        badges_campaign_details_form_data.append("file", in_mem_file_of_json); // Pass created inmem file
+        // push campaign details onto ipfs and place that hash
+        // at the top of the list hashes_of_badges_data
+        const hash_of_campaignDetails = await axios
+            .post(
+                "http://127.0.0.1:5001/api/v0/add",
+                badges_campaign_details_form_data,
+                {
+                    headers: {
+                        "Content-Disposition": "form-data",
+                        "Content-Type": "application/octet-stream",
+                    },
+                }
+            )
+            .then((resp) => {
+                return resp["data"]["Hash"];
+            });
+
+        // Start campaign = Badges
+        // 3 badges with their hashes [1, 2, 3]
+        // campaignData structure ready
+        let start_campaign_tx = await loyaltyconsole_contract
+            .connect(entity1)
+            .start_campaign(2, [
+                new TextEncoder().encode(hash_of_campaignDetails),
+                new TextEncoder().encode(hashes_of_badges_data[0]["Hash"]),
+                new TextEncoder().encode(hashes_of_badges_data[1]["Hash"]),
+                new TextEncoder().encode(hashes_of_badges_data[2]["Hash"]),
+            ]);
+
+        start_campaign_tx.wait(1);
+        // Campaign count should increase
+        let total_campaigns_now =
+            await loyaltyconsole_contract.total_campaigns();
+        expect(total_campaigns_now).to.equal(1);
+        // verify that there are 3 types of badges for currently deployed campaign
+        // Get campaign deployed address
+        // CampaignType: 2, among list of badge campaigns deployed which contract: first one, at index zero
+        let badges_camp_address =
+            await loyaltyconsole_contract._campaign_type_to_list_of_deployed(
+                2,
+                0
+            );
+        console.log(`BadgesCampaign Address: ${badges_camp_address}`);
+        let badges_camp_factory = await ethers.getContractFactory("Badges");
+        let badges_camp_contract =
+            badges_camp_factory.attach(badges_camp_address);
+
+        let total_badges_now =
+            await badges_camp_contract.total_types_of_badges();
+        console.log(`Total Types of Badges: ${total_badges_now}`);
+
+        // Subscribe customer 1 to loyalty system
+        // try functions with unsubscribed customer 2 and validate results/operations
+        // function interact_badges(
+        //     address customer,
+        //     uint256 _p_action,
+        //     uint256 _p_awarded_badge_type, // can be 0 for other actions
+        //     bytes[] memory _badges_hashes // along with updated campaigndetails struct too at 0 index
+        // ) public roleEntity
+        let cust1_address = await cust1.getAddress();
+        let empty_hashes = [new TextEncoder().encode(0)];
+
+        // interact_badges is entityOnly function
+        await expect(
+            loyaltyconsole_contract.interact_badges(
+                cust1_address,
+                1,
+                0,
+                empty_hashes
+            )
+        ).to.be.revertedWith("EntityOnly");
+
+        let cust1_reg_tx = await loyaltyconsole_contract
+            .connect(entity1)
+            .interact_badges(cust1_address, 1, 0, empty_hashes);
+        await cust1_reg_tx.wait(1);
+
+        // Then award customer badge to them
+        let cust1_badge1_tx = await loyaltyconsole_contract
+            .connect(entity1)
+            .interact_badges(cust1_address, 4, 1, empty_hashes);
+        await cust1_badge1_tx.wait(1);
+
+        // view total badges held by customer
+        // Total held by customer - 1
+        let cust1_total_badges_tx = await loyaltyconsole_contract
+            .connect(entity1)
+            .view_badges(cust1_address);
+        expect(Number(cust1_total_badges_tx)).to.equal(1);
+
+        // Now if entity decides to re-award that badge to the same customer
+        // no duplicate badge assignment
+        await expect(
+            loyaltyconsole_contract
+                .connect(entity1)
+                .interact_badges(cust1_address, 4, 1, empty_hashes)
+        ).to.be.revertedWith("AlreadyHasIt");
+
+        // Interact with badges and assign subscribed to this customer as well
+        let sub_badge_tx = await loyaltyconsole_contract
+            .connect(entity1)
+            .interact_badges(cust1_address, 4, 3, empty_hashes); // thirdtype - Newsletter subscription
+        await sub_badge_tx.wait(1);
+
+        // Expect customer to have 2 badges now
+        cust1_total_badges_tx = await loyaltyconsole_contract
+            .connect(entity1)
+            .view_badges(cust1_address);
+        expect(Number(cust1_total_badges_tx)).to.equal(2);
+
+        let total_circ = await badges_camp_contract.total_badges_circulating();
+        expect(Number(total_circ)).to.equal(2);
+
+        // Reassignment should fail
+        await expect(
+            loyaltyconsole_contract
+                .connect(entity1)
+                .interact_badges(cust1_address, 4, 3, empty_hashes)
+        ).to.be.revertedWith("AlreadyHasIt");
+    });
 });

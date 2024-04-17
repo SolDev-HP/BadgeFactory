@@ -36,13 +36,14 @@ contract LoyaltyConsole {
     mapping(address => bool) public _is_address_Customer;
     // Supported campaigns - and where their clones are (Address)
     mapping(address => bool) public is_address_Campaign;
-    // enum Campaign_Types {
-    //     REWARD_POINTS,
-    //     BADGES,
-    //     TICKETS,
-    //     CODES
-    // }
-    // Campaign_Types camp_type_choice;
+    enum Campaign_Types {
+        UNDEFINED, //0
+        REWARD_POINTS, //1
+        BADGES, //2
+        TICKETS, //3
+        CODES //4
+    }
+    Campaign_Types camp_type_choice;
     mapping(uint256 => uint256) public campaign_type_to_deploy_count;
     mapping(uint256 => address) private _campaign_type_to_implementation;
 
@@ -146,7 +147,7 @@ contract LoyaltyConsole {
     // pCampaign_details_hash[0] is always CampaignData struct
     // pCampaign_details_hash[1...N] are badges/tickets/coupons depending on campaign type
     function start_campaign(
-        uint p_campaign_type,
+        uint256 p_campaign_type,
         bytes[] memory p_campaign_details_hash
     ) public roleEntity returns (address _campaign_addr) {
         // Verify that we have atleast 1 hash with details
@@ -222,7 +223,7 @@ contract LoyaltyConsole {
     function interact_rewardpoints(
         address customer,
         uint points,
-        uint campaign_type,
+        uint256 campaign_type,
         bool _is_allocation
     ) public roleEntity {
         // Fidn last deployed reward points campaign
@@ -259,17 +260,74 @@ contract LoyaltyConsole {
         }
     }
 
+    // Now we have following functionality in badges
+
     function interact_badges(
         address customer,
         uint256 _p_action,
-        bool _is_setup,
-        bytes[] memory _badges_hashes
+        uint256 _p_awarded_badge_type, // can be 0 for other actions
+        bytes[] memory _badges_hashes // along with updated campaigndetails struct too at 0 index
     ) public roleEntity {
         // So for badges, we can have following interactions:
         // Subscribe(1): customer subscribe to deployed badges campaign
         // Set_Total_types_of_Badges(2): set total types of badges(uint256 x)
         // set_all_badges_details(3):
-        // Entity creates badges campaign, hasn't
+        // award_badge_to_customer(4):
+        // Entity creates badges campaign
+        // Is customer registered
+        if (_p_action == 1) {
+            subscribe_to_loyalty_system(customer);
+            return;
+        }
+        // Make sure we have the campaign deployed
+        // uint256 campaign_type = uint(Campaign_Types.BADGES);
+        require(
+            _campaign_type_to_list_of_deployed[2][
+                campaign_type_to_deploy_count[2] - 1
+            ] != address(0x0),
+            "NoCampaign"
+        );
+
+        // Get the campaign deployment address
+        // Get the latest deployed rewardpoints campaign
+        address campAddr = _campaign_type_to_list_of_deployed[2][
+            // make sure to grab the latest badges deployed
+            campaign_type_to_deploy_count[2] - 1
+        ];
+
+        if (_p_action == 3) {
+            IBadges(campAddr).set_all_badges_details_hashes(_badges_hashes);
+            return;
+        }
+
+        if (_p_action == 4) {
+            require(_p_awarded_badge_type != 0, "TypeStartsAt1");
+            IBadges(campAddr).award_badge(customer, _p_awarded_badge_type);
+            return;
+        }
+    }
+
+    // Badges view related functionalities can be grouped here
+    // For now we have total_held_by_customer
+    function view_badges(
+        address customer
+    ) public view roleEntity returns (uint256) {
+        // need to make sure campaign(badges) is deployed
+        uint256 campaign_type = uint(Campaign_Types.BADGES);
+        require(
+            _campaign_type_to_list_of_deployed[campaign_type][0] !=
+                address(0x0),
+            "NoCampaign"
+        );
+
+        // Get campaign address
+        address campAddr = _campaign_type_to_list_of_deployed[campaign_type][
+            // make sure to grab the latest badges deployed
+            campaign_type_to_deploy_count[campaign_type] - 1
+        ];
+
+        // This will change later, right now I'm concerned with total held
+        return IBadges(campAddr).total_customer_held_badges(customer);
     }
 
     function interact_tickets() public roleEntity {}

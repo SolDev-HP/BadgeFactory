@@ -2,8 +2,6 @@
 pragma solidity 0.8.20;
 import "./CampaignBase.sol";
 
-//import "hardhat/console.sol";
-
 // RewardPoints contract
 // Responsible for everything related to reward points - distribution/claims
 /// @title RewardPoints smart contract
@@ -98,9 +96,6 @@ contract RewardPoints is CampaignBase {
             ILoyaltyConsole(campaign_owner).is_customer(customer),
             "NotSubbedonConsole!"
         );
-        // console.log("What is hapnneing here");
-        // console.log(customer);
-        // console.log(ILoyaltyConsole(campaign_owner).is_customer(customer));
         // If I keep total_cust_counter for reference with loyalty console data,
         // this contract doesn't need _is_cust_subscribed anymore, just here, everywhere -
         // else it's already replaced by a call to LoyaltyConsole.is_customer() function

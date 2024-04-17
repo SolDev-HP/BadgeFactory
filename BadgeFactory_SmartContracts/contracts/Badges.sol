@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 import "./CampaignBase.sol";
+import "./interfaces/ILoyaltyConsole.sol";
 
 // LoyaltyBadges contract -> renamed to Badges, avoids confusion with LoyaltyConsole
 // Everything related to loyalty badges - owner, exchange, review
@@ -117,23 +118,59 @@ contract Badges is CampaignBase {
         badge_details_hash = _badge_type_to_badge_details_hash[_p_badge_type];
     }
 
-    function check_badges() external view onlyConsole returns (uint) {
-        return 2;
-    }
-
     //// Give badge to customer, check if customer has specific badge
     //// how many badges does customer hold,
-    function award_badge(
-        address customer,
-        uint256 _p_badge_type
-    ) external onlyConsole {}
 
     function check_customer_badge(
         uint256 _p_badge_type_to_check,
         address customer
-    ) external view onlyConsole returns (bool _does_customer_have_badge) {}
+    ) public view onlyConsole returns (bool _does_customer_have_badge) {
+        // Make sure customer is subscribed for this
+        require(
+            ILoyaltyConsole(campaign_owner).is_customer(customer),
+            "NotSubbedForBadges"
+        );
+
+        // Check if customer has this badge
+        uint256 total_held = _cust_address_to_total_held_badges[customer];
+        for (uint256 i = 0; i < total_held; ++i) {
+            // Remember: badge_type starts at 1
+            if (
+                _cust_add_to_held_badges_list[customer][i] ==
+                _p_badge_type_to_check
+            ) {
+                _does_customer_have_badge = true;
+            }
+        }
+    }
+
+    function award_badge(
+        address customer,
+        uint256 _p_badge_type
+    ) public onlyConsole {
+        // Is customer subscribed?
+        require(
+            ILoyaltyConsole(campaign_owner).is_customer(customer),
+            "NotSubbedForBadges"
+        );
+        // Does customer already have this badge?
+        require(!check_customer_badge(_p_badge_type, customer), "AlreadyHasIt");
+        // award badge to customer
+        _cust_add_to_held_badges_list[customer].push(_p_badge_type);
+        _cust_address_to_total_held_badges[customer] += 1;
+        // total circulating badges increased
+        total_badges_circulating += 1;
+    }
 
     function total_customer_held_badges(
         address customer
-    ) external view onlyConsole returns (uint256 _p_total_held) {}
+    ) public view onlyConsole returns (uint256 _p_total_held) {
+        // Make sure customer is subscribed for this
+        require(
+            ILoyaltyConsole(campaign_owner).is_customer(customer),
+            "NotSubbedForBadges"
+        );
+        // Get total badges held by given customer
+        _p_total_held = _cust_address_to_total_held_badges[customer];
+    }
 }
