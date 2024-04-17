@@ -20,3 +20,11 @@ This will use following things:
 
 update 17/04: 
 - Create a nextjs app to interact with BadgeFactory contracts deployed on MorphL2 sepolia testnet
+
+Framework - Nextjs v14
+Language - Typescript v3
+Auth - Nextjs Auth v4
+Database - Postgres (using prisma, if needed for later)
+Styling - Tailwind CSS
+Formatting - ESLint
+Wallet components - WAGMI 
