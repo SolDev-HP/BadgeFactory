@@ -1,34 +1,6 @@
 // Enter badges test
 // Now badges details structure has following format - using new common CampaignDetails data
-// const campaignDetails = {
-//     _campaign_id: Number(totalCampaigns) + 1,    // Some identifier, for now we keep it total+1
-//     _campaign_type: [1...4],                     // type of campaign (selectable range [1, 4])
-//     _campaign_name: "Campaign Name",             // bytes32, only 32 letters ascii
-//     _campaign_details: "Campaign Details",       // bytes32, only 32 letters ascii
-//     _campaign_start_date: "block.timestamp?",    // Starting datetime of Campaign
-//     _campaign_end_date: "block.timestamp?",      // Campaign ending datetime
-//     _campaign_owner: address,                    // Which console deployed it
-//     _campaign_specific_data: {
-//         _badges_campaign: {
-//             // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
-//             _types_of_badges: 10,               // Number of different types of badges (in view and their utility decided by Entity)
-//             _badges_details: [
-//                 // This will repeat for all types of badges
-//                 {
-//                     _badge_for: "string",
-//                     _badge_details: "",
-//                     // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
-//                     _badge_view: img | svg | gif,
-//                     _can_expire: true/false,
-//                     _expiry: timestamp,
-//                     _can_transfer: true/false,
-//                 },
-//             ],
-//             // Badge Visibility (publicly visible to everyone or limited visibility)
-//             _badge_visibility: "string",
-//         },
-//     _campaign_active: true,                         // Is campaign currently active
-// };
+// const campaignDetails = { present in README.md at root };
 const fs = require("fs");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
@@ -95,10 +67,6 @@ describe("Badges-Tests", function () {
         );
 
         // BadgeFactory & Deployer deployed here
-        // console.log(
-        //     `BadgeFactory Deployed At: ${await badgefactory.getAddress()}`
-        // );
-        // console.log(`Owner is: ${await factoryOwner.getAddress()}`);
 
         // Be a brand a try to deploy
         // Register as a brand

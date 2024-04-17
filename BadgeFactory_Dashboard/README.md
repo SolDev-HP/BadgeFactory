@@ -17,3 +17,6 @@ This will use following things:
 
 - node backend to handle deployments and onchain monitoring
 - Different metrics and insights into campaigns and customers 
+
+update 17/04: 
+- Create a nextjs app to interact with BadgeFactory contracts deployed on MorphL2 sepolia testnet
