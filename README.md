@@ -40,6 +40,17 @@ Test only registered can access badgefactory, yea, even owner needs to register 
 (LoyaltyConsole deployed by FactoryOwner, anyone can do that on badgefactory, I was waiting on my morphl2 sepolia eth deposit on other account so I thought why not deploy my own as well)
 Demonstrating that Entity can deploy console(s) from badgefactory
 LoyaltyConsole: 0x457dA0FC9B3B7D8b7f91D6bC66Ba347Cd32142c2
+
+Deployed first campaign, reward points with 0x00 details hash
+Campaign1-RewardPoints: 0xf7e5253dA78D0d87f30a6AEd78CB16284c8E7538
+
+Entity1 LoyaltyConsole:
+0x47E6350a44B4D7F4B1d0cFaD4407190dbb06DDC1
+
+Customer1: 0x828E4F32a490e1cfF03FEACD4F3F22DB62D969E0
+
+LoyaltyConsole[1]->RewardPoints->Award to Customer1 - 29905
+Tx: 0x8af6ad54fab6acbf218e7e2af181a8e7274a4c50fd804f85160de523ca51c788
 ```
 
 Update: 13/04
