@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { WagmiProvider, useAccount } from "wagmi";
+//import { wagmi_config } from "./wagmiconfig/wagmi_config";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
