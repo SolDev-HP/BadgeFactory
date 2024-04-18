@@ -14,12 +14,40 @@ More will be added here as I progress on creating BadgeFactory for this hackatho
 
 ---
 
-Update: 11/04
-This is how I see these projects will interact, this will keep updating as we implement the basic idea of loyalty management system console for any Entity (Business/Brand/Project)
+Update: 17/04
+BadgeFactory and LoyaltyConsole deployment on MorphL2 sepolia testnet
+Here are the details
+
+```
+MorphL2 Testnet Deployments
+https://explorer-testnet.morphl2.io/
+
+FactoryOwner: 0xBcE03a4B33337E4776d845909C041CAAD4799790
+
+Campaign Implementations at:
+RewardPoints: 0x735cF22eb57eFC975aF3772163050490C393eeC0
+Badges: 0x6c3554b637a47f7F440ca657b55E9866555d1F53
+Tickets: 0xe4beb3b8e7D4AAa98d089BBa6926DfB8C3D92d44
+Codes: 0x3B4F23346dB55c6B6f1e5100555696B2e80e2e25
+
+BadgeFactory: 0x1Fbe77718B3730249c14530417c69e607cC5a925
+
+Entity: 0x02588fB0A8B5D5a887138Cf8152d96d60E753702
+
+Test only registered can access badgefactory, yea, even owner needs to register as either customer or entity :D
+0xa573291fd5a14341e43a1c3014eeb5919f0ffc391b285403e735de950cceb575 - failed tx
+
+(LoyaltyConsole deployed by FactoryOwner, anyone can do that on badgefactory, I was waiting on my morphl2 sepolia eth deposit on other account so I thought why not deploy my own as well)
+Demonstrating that Entity can deploy console(s) from badgefactory
+LoyaltyConsole: 0x457dA0FC9B3B7D8b7f91D6bC66Ba347Cd32142c2
+```
 
 Update: 13/04
 Legends are renamed correctly, many functions are already implemented in smart contracts, check hardhat config for morphl2 config and rpc, use hardhat_morphl2_fork in --network option to fork morphl2 chain current state locally and perform tests of BadgeFactory, LoyaltyConsole, RewardPoints unittests on it.
 ![Will be updated periodically throughout](https://github.com/SolDev-HP/BadgeFactory/raw/main/assets/imgs/BadgeFactory-uml-flow.png)
+
+Update: 11/04
+This is how I see these projects will interact, this will keep updating as we implement the basic idea of loyalty management system console for any Entity (Business/Brand/Project)
 
 ---
 
