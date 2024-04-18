@@ -37,23 +37,6 @@ Following operations will happen on IPFS
 
 #### dev notes:
 
-File - LoyaltyConsole.sol on what Campaign struct contains right now and what is can contain in further developments
-
-```solidity
-// We store this on ipfs so we don't have this on contracts
-// struct Campaign {
-//     uint256 _campaign_id;                // ID [TotalCampaignsDeployed+1] don't have this?
-//     bytes32 _campaign_name;              // 32 lettes name (becuase bytes32, extended can be bytes if needed)
-//     bytes32 _campaign_details;           // 32 letters details (Can change later)
-//     uint256 _campaign_type;              // campaign_type [1, 2, 3, 4]
-//     bool _campaign_active;               // Set later?
-// }
-// What this structure can be
-// Campaign type and details
-// Campaign can also have campaignCreationTimestamp -
-// campaign expiry in campaignExpiryTimestamp/campaignEndTimestamp
-```
-
 File - RewardPoints.sol on how customer subscription to a campaign should work, and with what kind of customer details (For later versions)
 
 ```solidity
@@ -67,9 +50,87 @@ File - RewardPoints.sol on how customer subscription to a campaign should work, 
 ```
 
 further on Campaign struct
+Stored onchain - \_campaign_id, \_campaign_type, \_campaign_owner
+Everything else if stored within this struct of campaignDetails, and then this is stored on ipfs
+Campaign only contains this details hash.
+
+Same as root main README file, internal changes will be updated in this struct
 
 ```solidity
-
+const campaignDetails = {
+    _campaign_id: Number(totalCampaigns) + 1,    // Some identifier, for now we keep it total+1
+    _campaign_type: [1...4],                     // type of campaign (selectable range [1, 4])
+    _campaign_name: "Campaign Name",             // bytes32, only 32 letters ascii
+    _campaign_details: "Campaign Details",       // bytes32, only 32 letters ascii
+    _campaign_start_date: "block.timestamp?",    // Starting datetime of Campaign
+    _campaign_end_date: "block.timestamp?",      // Campaign ending datetime
+    _campaign_owner: address,                    // Which console deployed it
+    _campaign_specific_data: {
+    // Campaign specific data, only one of them will be active for any given campaign and its details
+    // This base structure will expand as new campaign types are added
+    //
+        _reward_points_campaign: {
+            // how do you earn? purchase, interaction, distribution
+            _earning_rules: {
+                // At present we allow redeem/reward or x amount of points
+                // assumption is 1:1, Entity decides how many points to assign for
+                // any given interaction or purchase or visit or anything reward worthy
+                _default_rate: 1,       // We may add customization to change this
+                _changers_updaters: {}, // Incase of custom reward points redeem/reward rule need
+            },
+            _welcome_bonus: 10000,       // If Entity would like to give them welcome bonus as soon as they(customers) subscribe or register themselves
+            _earning_ceiling: 5000000,   // any max amount customers can obtain before hiting ceiling
+            // how do you redeem
+            _max_redeemable_at_once: 5000,  // Max in one interaction. can be 0 for any amount allowed
+            _redemption_option: {}, // Not need for now, may be prefix points->product kind of thing
+            // is expirable?
+            _is_expirable: false,
+            _expiry: timestamp,
+            // is transferable?
+        },
+        _badges_campaign: {
+            // Badge criteria - what it's given for, ex. ["Top User of the Day/Week/Month/Year" or something :D]
+            _types_of_badges: 10,               // Number of different types of badges (in view and their utility decided by Entity)
+            _badges_details: [
+                // This will repeat for all types of badges
+                {
+                    _badge_for: "string",
+                    _badge_details: "",
+                    // Badge itself - the UI and look and feel of badge (image or gif or svg -> ipfs)
+                    _badge_view: img | svg | gif,
+                    _can_expire: true/false,
+                    _expiry: timestamp,
+                    _can_transfer: true/false,
+                    _img_ipfs_hash: bytes,
+                    // can add more functional details but these are mainly for UI/UX
+                    // smartcontracts are only handling the hash of that ipfs data
+                    // This can change based on which details are important enough to be
+                    // kept in the contract itself, for example - timestamps seem they belong on
+                    // contract as they can be used for verification. And more..
+                },
+            ],
+            // Badge Visibility (publicly visible to everyone or limited visibility)
+            _badge_visibility: "string",
+        },
+        _tickets_campaign: {
+            // What are they for
+            // Expiry
+            // is Transferable?
+            // any other restrictions...
+            // Not considering for this hackathon, but will add once it's done
+        },
+        _codes_campaign: {
+            // What is it? Coupon code or discount code
+            // If coupon, how much discount does it apply
+            // If discount code, what discount that code relates to
+            // expiry,
+            // is Transferable?
+            // any other restrictions..
+            // Not considering for this hackathon, but will add once it's done.
+        },
+    },
+    _campaign_active: true,                         // Is campaign currently active
+};
 ```
 
 #### about using ipfs:

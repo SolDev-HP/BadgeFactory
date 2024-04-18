@@ -75,14 +75,14 @@ module.exports = {
         // https://docs.morphl2.io/docs/build-on-morph/build-on-morph/verify-your-smart-contracts/
         // @todo fix before submission
         apiKey: {
-            morphTestnet: "TO-DO",
+            tMorph: "abc",
         },
         customChains: [
             {
-                network: "morphTestnet",
+                network: "tMorph",
                 chainId: 2710,
                 urls: {
-                    apiURL: "https://explorer-api-testnet.morphl2.io/api ",
+                    apiURL: "https://explorer-api-testnet.morphl2.io/api",
                     browserURL: "https://explorer-testnet.morphl2.io/",
                 },
             },

@@ -14,12 +14,15 @@ More will be added here as I progress on creating BadgeFactory for this hackatho
 
 ---
 
+Update: 18/04
+All deployed smart contracts on morphl2 sepolia are now verified. Use remix as controlpanel or interact directly on morphl2 sepolia testnet explorer.
+
 Update: 17/04
 BadgeFactory and LoyaltyConsole deployment on MorphL2 sepolia testnet
 Here are the details
 
 ```
-MorphL2 Testnet Deployments
+MorphL2 Testnet Deployments (Verified on MorphL2 Sepolia Testnet)
 https://explorer-testnet.morphl2.io/
 
 FactoryOwner: 0xBcE03a4B33337E4776d845909C041CAAD4799790
