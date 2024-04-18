@@ -37,7 +37,6 @@ Entity: 0x02588fB0A8B5D5a887138Cf8152d96d60E753702
 Test only registered can access badgefactory, yea, even owner needs to register as either customer or entity :D
 0xa573291fd5a14341e43a1c3014eeb5919f0ffc391b285403e735de950cceb575 - failed tx
 
-(LoyaltyConsole deployed by FactoryOwner, anyone can do that on badgefactory, I was waiting on my morphl2 sepolia eth deposit on other account so I thought why not deploy my own as well)
 Demonstrating that Entity can deploy console(s) from badgefactory
 LoyaltyConsole: 0x457dA0FC9B3B7D8b7f91D6bC66Ba347Cd32142c2
 
