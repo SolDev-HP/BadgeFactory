@@ -1,0 +1,121 @@
+{
+    "accounts": {
+      "account{1}": "0xBcE03a4B33337E4776d845909C041CAAD4799790",
+      "account{-1}": "0x02588fb0a8b5d5a887138cf8152d96d60e753702",
+      "account{0}": "0x02588fB0A8B5D5a887138Cf8152d96d60E753702"
+    },
+    "linkReferences": {},
+    "transactions": [
+      {
+        "timestamp": 1713465585570,
+        "record": {
+          "value": "0",
+          "inputs": "(address)",
+          "parameters": [
+            "0x2851605C6B6Ab6b9f5639ed38770B959413Bf5Dd"
+          ],
+          "name": "subscribe_customer",
+          "type": "function",
+          "to": "created{undefined}",
+          "from": "account{1}"
+        }
+      },
+      {
+        "timestamp": 1713465600533,
+        "record": {
+          "value": "0",
+          "inputs": "(address)",
+          "parameters": [
+            "0x2851605C6B6Ab6b9f5639ed38770B959413Bf5Dd"
+          ],
+          "name": "subscribe_to_loyalty_system",
+          "type": "function",
+          "to": "created{undefined}",
+          "from": "account{1}"
+        }
+      },
+      {
+        "timestamp": 1713465617063,
+        "record": {
+          "value": "0",
+          "inputs": "(address)",
+          "parameters": [
+            "0x2851605C6B6Ab6b9f5639ed38770B959413Bf5Dd"
+          ],
+          "name": "subscribe_to_loyalty_system",
+          "type": "function",
+          "to": "created{undefined}",
+          "from": "account{-1}"
+        }
+      },
+      {
+        "timestamp": 1713465665935,
+        "record": {
+          "value": "0",
+          "inputs": "(address,uint256,uint256,bool)",
+          "parameters": [
+            "0x2851605C6B6Ab6b9f5639ed38770B959413Bf5Dd",
+            "60000",
+            "1",
+            true
+          ],
+          "name": "interact_rewardpoints",
+          "type": "function",
+          "to": "created{undefined}",
+          "from": "account{0}"
+        }
+      },
+      {
+        "timestamp": 1713466230403,
+        "record": {
+          "value": "0",
+          "inputs": "(uint256,bytes[])",
+          "parameters": [
+            "1",
+            [
+              "0x00"
+            ]
+          ],
+          "name": "start_campaign",
+          "type": "function",
+          "to": "created{undefined}",
+          "from": "account{-1}"
+        }
+      },
+      {
+        "timestamp": 1713466395522,
+        "record": {
+          "value": "0",
+          "inputs": "(address,uint256,uint256,bool)",
+          "parameters": [
+            "0x2851605C6B6Ab6b9f5639ed38770B959413Bf5Dd",
+            "0",
+            "1",
+            true
+          ],
+          "name": "interact_rewardpoints",
+          "type": "function",
+          "to": "created{undefined}",
+          "from": "account{0}"
+        }
+      },
+      {
+        "timestamp": 1713466434538,
+        "record": {
+          "value": "0",
+          "inputs": "(address,uint256,uint256,bool)",
+          "parameters": [
+            "0x2851605C6B6Ab6b9f5639ed38770B959413Bf5Dd",
+            "5000",
+            "1",
+            true
+          ],
+          "name": "interact_rewardpoints",
+          "type": "function",
+          "to": "created{undefined}",
+          "from": "account{0}"
+        }
+      }
+    ],
+    "abis": {}
+  }
