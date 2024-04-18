@@ -10,9 +10,9 @@ import { cookieStorage, createStorage } from "wagmi";
 // config();
 //// WalletConnect projectID needed to use their connector in wagmi
 //// I will mostly use WalletConnect button, and Network change-add-update 
-export const projectId = process.env.WALLET_CONNECT_PROJECTID as string || 'loading'; 
+export const projectId = process.env.WALLET_CONNECT_PROJECTID as string || "loading"; 
 //// IF we don't have projectID, throw error and indicate
-// if(!projectId) throw new Error("WalletConnect ProjectID needed");
+//if(!projectId) throw new Error("WalletConnect ProjectID needed");
 
 //// BadgeFactory project details
 //// Once I deploy badgefactory on vercel, I can redirect it to dotzero labs subdomain

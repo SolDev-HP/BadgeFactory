@@ -6,5 +6,5 @@
 // Dashboard - should be 2 routes, customer-dashboard route, entity-dashboard route
 
 export default function ConnectButton() {
-    return <w3m-button />
+    return <w3m-button loadingLabel="Loading..."/>
 }
