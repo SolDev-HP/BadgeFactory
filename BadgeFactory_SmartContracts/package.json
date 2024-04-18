@@ -41,6 +41,8 @@
     "testcodesl2": "yarn hardhat test ./test/CodesTests.js --network hardhat_morphl2_fork",
     "testwithgas": "REPORT_GAS=true yarn hardhat test",
     "testl2withgas": "REPORT_GAS=true yarn hardhat test --network hardhat_morphl2_fork",
+    "deploylocal": "yarn hardhat run ./ignition/modules/deploy_local.js --network hardhat_morphl2_fork",
+    "deploytestnet": "yarn hardhat run ./ignition/modules/deploy_testnet.js --network hardhat_morphl2_testnet",
     "sizes": "yarn hardhat size-contracts"
   }
 }
