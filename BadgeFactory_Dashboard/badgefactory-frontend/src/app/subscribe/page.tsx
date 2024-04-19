@@ -12,7 +12,7 @@
 import Image from "next/image";
 import styles from "./styles.module.css";
 
-export default function Home() {
+export default function Subscribe() {
     return (
         <main className="flex w-full min-h-fit flex-col items-center justify-between p-24 content-center">
             <div className={styles.imagecontainer}>
@@ -25,6 +25,8 @@ export default function Home() {
                     priority
                 />
             </div>
+            <br />
+            <h3>Subscribe to BadgeFactory by selecting to subscribe as Customer or Entity.</h3>
         </main>
     );
 }
