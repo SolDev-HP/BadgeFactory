@@ -1,0 +1,4 @@
+# Ignore these files for vercel deployment
+
+.env*
+!.env.vault

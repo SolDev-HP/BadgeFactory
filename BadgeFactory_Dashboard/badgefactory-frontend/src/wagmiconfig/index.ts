@@ -1,18 +1,14 @@
 // Config file for the wagmi provider
 // Supported Eth-Sepolia and MorphL2-sepolia testnets
 // Not used for now
-import { http, createConfig } from "wagmi";
 import { sepolia, morphSepolia } from "viem/chains";
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config";
 import { cookieStorage, createStorage } from "wagmi";
-// import { config } from "dotenv";
-
-// config();
 //// WalletConnect projectID needed to use their connector in wagmi
 //// I will mostly use WalletConnect button, and Network change-add-update 
-export const projectId = process.env.WALLET_CONNECT_PROJECTID as string || "loading"; 
+export const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID;
 //// IF we don't have projectID, throw error and indicate
-//if(!projectId) throw new Error("WalletConnect ProjectID needed");
+if (!projectId) throw new Error("WalletConnect ProjectID needed");
 
 //// BadgeFactory project details
 //// Once I deploy badgefactory on vercel, I can redirect it to dotzero labs subdomain
@@ -26,14 +22,15 @@ const metadata = {
 }
 
 //// Supported chains for now are eth-sepolia and morphl2-sepolia
-const chains = [sepolia, morphSepolia] as const 
+const chains = [sepolia, morphSepolia] as const
 
 export const wagmi_config = defaultWagmiConfig({
-    chains,
     projectId,
+    chains,
     metadata,
     ssr: true,
-    storage: createStorage({
-        storage: cookieStorage
-    })
+    // For now, use default, localStorage
+    // storage: createStorage({
+    //     storage: cookieStorage
+    // })
 })
