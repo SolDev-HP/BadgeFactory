@@ -62,7 +62,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
     // Get BadgeFactory deployment address morphl2 sepolia
     const ml2_badgefactory_address = process.env.NEXT_PUBLIC_BADGEFACTORY_MORPHL2_ADDRESS;
     if (!ml2_badgefactory_address) throw new Error("BadgeFactory morphl2 address not set");
-
+    console.log("Coming up to auth ----------------")
     // credentials provider setup - wallet connect wagmi
     const providers = [
         credentialsProvider({
@@ -152,6 +152,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
         // use default connect + create next auth session 
         // and then come back to this from /subscribe page
         providers.pop();
+        console.log("Provider removed ------")
     }
 
     return await nextAuth(req, res, {
@@ -160,11 +161,12 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
         providers,
         session: {
             strategy: "jwt",
-            maxAge: 24 * 60 * 60 // 24 hours maxage for token
+            maxAge: 24 * 60 * 60 // 24 hours maxage for auth token
         },
         callbacks: {
             session({ session, token }) {
                 if (!token.sub) {
+                    console.log("No Auth Token");
                     return session;
                 }
 
@@ -172,7 +174,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
                 if (chainId && address && userrole) {
                     session.address = address;
                     session.chainId = parseInt(chainId, 10);
-                    session.userrole = userrole;
+                    session.userrole = userrole;             // I've added this into Session interface above
                 }
 
                 return session;

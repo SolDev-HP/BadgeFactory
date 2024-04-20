@@ -30,13 +30,13 @@ export const wagmi_config = defaultWagmiConfig({
     metadata,
     ssr: true,
     // For now, use default, localStorage
-    // storage: createStorage({
-    //     storage: cookieStorage
-    // })
+    storage: createStorage({
+        storage: cookieStorage
+    })
 })
 
-declare module 'wagmi' {
-    interface Register {
-        config: typeof wagmi_config
-    }
-}
+// declare module 'wagmi' {
+//     interface Register {
+//         config: typeof wagmi_config
+//     }
+// }

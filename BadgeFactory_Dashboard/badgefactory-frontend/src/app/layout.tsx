@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   // Read initial state from the cookie sent, if it's not present, new will be created
   const initialState = cookieToInitialState(wagmi_config, headers().get("cookie"));
-  console.log("Loading the page");
+  // console.log("Loading the page");
   return (
     <html lang="en">
       <body className="w-full min-h-screen content-center h-screen flex items-center">
