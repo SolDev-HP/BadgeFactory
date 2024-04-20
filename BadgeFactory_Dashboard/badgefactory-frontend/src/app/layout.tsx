@@ -1,8 +1,8 @@
 import { wagmi_config } from "@/wagmiconfig";
 import { headers } from "next/headers";
-import { cookieToInitialState, WagmiProvider } from "wagmi";
+import { cookieToInitialState } from "wagmi";
 import "./globals.css";
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import ContextProvider from "@/context";
 
 
@@ -16,20 +16,22 @@ import ContextProvider from "@/context";
 // //// Once I deploy badgefactory on vercel, I can redirect it to dotzero labs subdomain
 // //// As I own dotzerolabs.com, it should be straight-forward to have that subdomain and vercel deployment
 // //// interact the way I want them to
-// export const metadata = {
-//   name: "BadgeFactory",
-//   description: "Unified platform for loyalty management system, on a mission to create globally interlinked loyalty network .0",
-//   url: "https://badgefactory.dotzerolabs.com/",
-//   icons: ["https://badgefactory.dotzerolabs.com/favicon.ico"]
-// }
+//// Layout should have metadata about the project, so I've kept this here, it'll come in every view
+export const metadata = {
+  name: "BadgeFactory",
+  description: "Unified platform for loyalty management system, on a mission to create globally interlinked loyalty network .0",
+  url: "https://badgefactory.dotzerolabs.com/",
+  icons: ["https://badgefactory.dotzerolabs.com/favicon.ico"]
+}
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   // Read initial state from the cookie sent, if it's not present, new will be created
   const initialState = cookieToInitialState(wagmi_config, headers().get("cookie"));
+  console.log("Loading the page");
   return (
     <html lang="en">
       <body className="w-full min-h-screen content-center h-screen flex items-center">

@@ -13,7 +13,6 @@ const queryClient = new QueryClient();
 
 // verify projectid from environment
 if (!projectId) throw new Error("ProjectId is not available");
-
 // no analytics events, may be this way we solve pulse.walletconnect error @todo not severe
 createWeb3Modal({
     wagmiConfig: wagmi_config,
