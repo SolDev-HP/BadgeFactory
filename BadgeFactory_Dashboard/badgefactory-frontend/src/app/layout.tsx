@@ -35,7 +35,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="w-full min-h-screen content-center h-screen flex items-center">
-        <ContextProvider initialState={initialState}>{children}</ContextProvider>
+        <ContextProvider initialState={initialState}>
+            {children}
+        </ContextProvider>
       </body>
     </html>
   );

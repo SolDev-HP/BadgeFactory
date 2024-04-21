@@ -20,7 +20,13 @@ import CustomButton from "@/components/CustomButton";
 // Toast styling (not using for now)
 // import styles from "./styles.module.css";
 // Auth client
+// Nextjs auth provider setup
+import { SessionProvider } from 'next-auth/react';
 
+// May be paths for after validation?
+import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from "next/cache";
 // Base idea for landing page and user views. 
 // Based on user's authentication stage, decide which view to show
 // If user wallet is not connected, show modalview open({ view: "connect" })
@@ -36,10 +42,16 @@ const Home: NextPage = ({ }) => {
   // Validate mount state?
   // verify mount state to match states between clientside and serverside
   const [hasMounted, setHasMounted] = useState<boolean>(false);
-
+  const router = useRouter();
+  const [ routerSet, setRouter ] = useState<boolean>(false);
   useEffect(() => {
     setHasMounted(true);
   }, [])
+
+  useEffect(() => {
+    if(!router) throw new Error("Router still now available?")
+    setRouter(hasMounted);
+  }, [hasMounted, router]);
 
   // Return null if we haven't mounted yet
   //if (!hasMounted) return null;
@@ -57,7 +69,7 @@ const Home: NextPage = ({ }) => {
 
   // we need to check view, what view do we need to present to the user?
   // Default view if always set first
-  const [view, changeView] = useState<"default" | "qr" | "signedIn">("default");
+  const [view, changeView] = useState<"default" | "connected" | "subscribed">("default");
   // Have a hook on onAccountsChanged 
   useAccountEffect({
     config: wagmi_config,
@@ -84,7 +96,6 @@ const Home: NextPage = ({ }) => {
   // uri message string directly comes into provider 
   // const [uristring, setUriString] = useState<string>("");
 
-
   // Check auth client init
   useEffect(() => {
     AuthClient.init({
@@ -110,7 +121,7 @@ const Home: NextPage = ({ }) => {
       if (open) { // If web3modal is open, close it because we already have address
         close();  // next would be signing a message to subscribe to badgefactory
       }
-      changeView("signedIn");
+      changeView("connected");
     }
   }, [address, changeView, open, close]);
 
@@ -126,7 +137,7 @@ const Home: NextPage = ({ }) => {
   // to the user that has following details
   // aud | domain | chainId | type | nonce | statement
   // statement will change based on subscribed as customer or entity
-  const perform_sign_request = async (signed_message: string) => {
+  const perform_sign_request = async (signed_message: string, clicker: string) => {
     let uristring_internal = "";
     await client?.request({
       aud: window.location.href,
@@ -140,32 +151,50 @@ const Home: NextPage = ({ }) => {
         uristring_internal = uri
       }
     });
+
+    // Is it possible to check here whether user is registered here?
+    // check user role - if not 0 go forward, but otherwise change view
+
+
     // Once we have the format to be signed, send that to
     // the wallet, currently it's in wc form, it should display all details
     // of what is being signed here @todo
     client?.core.pairing.pair({ uri: uristring_internal });
         signMessage({
           account: `0x${address.substring(2)}`,
-          message: uristring_internal
+          message: signed_message
         }, {
-          onSuccess(data, variables, context) {
-            console.log("Successfully signed")
-            // console.log("AUTH RESPONSE ARRIVED");
-            // Doesn't work @todo
-            // const sendnotif = () => toast("Subscribed to BadgeFactory.");
-            // sendnotif();
-          },
-          onError(error, variables, context) {
-            console.error(error);
-            const sendnotif = () => toast(`Error Occurred:\n${error.message}`);
-            sendnotif();
-          },
-          onSettled(data, error, variables, context) {
-            const sendnotif = () => toast("Subscribed to BadgeFactory.");
-            sendnotif();
-            console.log("It has settled");  // probably for tx
-            // Transfer user to their respective locations
-          },
+        onSuccess(data, variables, context) {
+          console.log("Successfully signed")
+          // console.log("AUTH RESPONSE ARRIVED");
+          // Doesn't work @todo
+          // const sendnotif = () => toast("Subscribed to BadgeFactory.");
+          // sendnotif();
+          const sendnotif = () => toast("Subscribed to BadgeFactory.");
+          sendnotif();
+
+          // Can this work?
+          if(clicker == "customer") {
+            //revalidatePath("/customer");
+            //redirect("/customer");
+            router.push("/customer");
+          } else if (clicker == "entity") {
+            //revalidatePath("/entity");
+            //redirect("/entity");
+            router.push("/entity");
+          }
+          //revalidatePath("/")
+        },
+        onError(error, variables, context) {
+          console.error(error);
+          const sendnotif = () => toast(`Error Occurred:\n${error.message}`);
+          sendnotif();
+        },
+        onSettled(data, error, variables, context) {
+          console.log("It has settled");  // probably for tx
+          //changeView("subscribed");
+          // Transfer user to their respective locations
+        },
         })
   }
 
@@ -198,11 +227,11 @@ const Home: NextPage = ({ }) => {
       signed_message = "Entity Signin to BadgeFactory with Wallet.";
     }
     
-    perform_sign_request(signed_message);
+    perform_sign_request(signed_message, clickedevent);
   };
 
   return (
-    <>
+    <SessionProvider refetchInterval={600}>
       <main className="flex w-full min-h-fit flex-col items-center justify-between p-24 content-center">
         <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
           <Image
@@ -216,11 +245,6 @@ const Home: NextPage = ({ }) => {
         </div>
         <br /><br />
         <br /><br />
-        <button onClick={
-          () => {
-            toast("Hello World from Badgefactory")
-          }
-        }>Notify me</button>
         {
           view === "default" && (
             <>
@@ -229,15 +253,23 @@ const Home: NextPage = ({ }) => {
           )
         }
         {
-          view === "signedIn" && (
+          view === "connected" && (
             <>
               <CustomButton user_address={address} onCustSignin={onSignMessage} onEntitySignin={onSignMessage} />
             </>
           )
         }
+        {
+          view === "subscribed" && (
+            <>
+              <button>Go To Entity Dashboard</button>
+              <button>Go To Customer Dashboard</button>
+            </>
+          )
+        }
       </main>
       <Toaster />
-    </>
+    </SessionProvider>
   );
 }
 

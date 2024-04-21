@@ -1,23 +1,29 @@
 // Use nextjs auth for message signing 
-
+// Referencing walletconnect nextauth docs:
+// https://docs.walletconnect.com/web3modal/nextjs/siwe/next-auth
 import { NextApiRequest, NextApiResponse } from "next";
 import credentialsProvider from "next-auth/providers/credentials";
 import { getCsrfToken } from "next-auth/react";
-import nextAuth from "next-auth";
+import NextAuth from "next-auth";
 import type { SIWESession } from "@web3modal/siwe";
 import { SiweMessage } from "siwe";
 import { ethers } from "ethers";
 
+// Define custom options, and make it available everywhere
+// every get/post gets checked, don't have anything post related,
+// only get and nonce generate if user is not already registered/session isn't already active
+import { NextAuthOptions } from "next-auth";
 
 // by-default we have this session var, with address and chainId
 // By this I can just use session and get address is user is already logged in
 // on given chainid, and user role may be? @todo
 // Own own session object for the user that uses BadgeFactory
+
+// Don't extend for now, but check internally @todo
 declare module 'next-auth' {
     interface Session extends SIWESession {
         address: string
         chainId: number
-        userrole: string
     }
 }
 
@@ -46,25 +52,26 @@ const min_badgefactory_abi = [
 ]
 
 // This will be session that is going to be used in nextAuth obj creation
-export default async function auth(req: NextApiRequest, res: NextApiResponse) {
-    const nextAuthSecret = process.env.NEXTAUTH_SECRET;
-    if (!nextAuthSecret) throw new Error("NextAuth not set");
+const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+if (!nextAuthSecret) throw new Error("NextAuth not set");
 
-    // Validate projectid
-    const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID;
-    if (!projectId) throw new Error("Wagmi ProjectID not set");
+// Validate projectid
+const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID;
+if (!projectId) throw new Error("Wagmi ProjectID not set");
 
-    // Get MorphL2 RPC from env vars
-    const ml2_rpc = process.env.NEXT_PUBLIC_MORPHL2_RPC;
-    // RPC is required for auth
-    if (!ml2_rpc) throw new Error("MorphL2 RPC not set");
+// Get MorphL2 RPC from env vars
+const ml2_rpc = process.env.NEXT_PUBLIC_MORPHL2_RPC;
+// RPC is required for auth
+if (!ml2_rpc) throw new Error("MorphL2 RPC not set");
 
-    // Get BadgeFactory deployment address morphl2 sepolia
-    const ml2_badgefactory_address = process.env.NEXT_PUBLIC_BADGEFACTORY_MORPHL2_ADDRESS;
-    if (!ml2_badgefactory_address) throw new Error("BadgeFactory morphl2 address not set");
-    console.log("Coming up to auth ----------------")
-    // credentials provider setup - wallet connect wagmi
-    const providers = [
+// Get BadgeFactory deployment address morphl2 sepolia
+const ml2_badgefactory_address = process.env.NEXT_PUBLIC_BADGEFACTORY_MORPHL2_ADDRESS;
+if (!ml2_badgefactory_address) throw new Error("BadgeFactory morphl2 address not set");
+console.log("Coming up to auth ----------------")
+
+export const authOptions: NextAuthOptions = {
+    secret: nextAuthSecret,
+    providers: [
         credentialsProvider({
             name: 'mSepolia',
             credentials: {
@@ -80,7 +87,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
                 }
             },
             // How user should be authorized to use badgefactory
-            async authorize(credentials) {
+            async authorize(credentials, req) {
                 // If we don't have creds, throw? @todo for now just return null sess
                 if (!credentials) return null;
 
@@ -105,7 +112,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
                     if (Number(userrole) !== 0) {
                         // already done
                         return {
-                            id: `eip155:${siwe.chainId}:${siwe.address}:${Number(userrole)}`
+                            id: `eip155:${siwe.chainId}:${siwe.address}`
                         };
                     }
 
@@ -127,7 +134,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
 
                     if (result.success) {
                         return {
-                            id: `eip155:${siwe.chainId}:${siwe.address}:${Number(userrole)}`
+                            id: `eip155:${siwe.chainId}:${siwe.address}`
                         }
                     }
 
@@ -141,44 +148,58 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
             }
 
         })
-    ];
-
-    // Default signing page
-    const isSubscribePage = req.method == 'GET' && req.query?.['nextauth']?.includes("/subscribe");
-
-    // SIWE on subscribepage only
-    if (!isSubscribePage) {
-        // Remove eth provider we just added
-        // use default connect + create next auth session 
-        // and then come back to this from /subscribe page
-        providers.pop();
-        console.log("Provider removed ------")
-    }
-
-    return await nextAuth(req, res, {
-        // Nextauth jwt start
-        secret: nextAuthSecret,
-        providers,
-        session: {
-            strategy: "jwt",
-            maxAge: 24 * 60 * 60 // 24 hours maxage for auth token
-        },
-        callbacks: {
-            session({ session, token }) {
-                if (!token.sub) {
-                    console.log("No Auth Token");
-                    return session;
-                }
-
-                const [, chainId, address, userrole] = token.sub.split(":")
-                if (chainId && address && userrole) {
-                    session.address = address;
-                    session.chainId = parseInt(chainId, 10);
-                    session.userrole = userrole;             // I've added this into Session interface above
-                }
-
+    ],
+    session: {
+        strategy: "jwt",
+        maxAge: 24 * 60 * 60 // 24 hours maxage for auth token
+    },
+    callbacks: {
+        session({ session, token }) {
+            if (!token.sub) {
+                console.log("No Auth Token");
                 return session;
             }
+
+            const [, chainId, address] = token.sub.split(":")
+            if (chainId && address) {
+                session.address = address;
+                session.chainId = parseInt(chainId, 10);
+                //session.userrole = userrole;             // I've added this into Session interface above
+            }
+
+            return session;
         }
-    })
-}
+    },
+    // Turn on debugger and logger so we can log all requests coming in 
+    // and going out
+    debug: true,
+    logger: {
+        // This defaults to console anyway,
+        // but I'd want to customize it a bit further
+        // @todo remove if not happening 
+        error(code, metadata) {
+            console.error(code, metadata)
+        },
+        warn(code) {
+            console.warn(code)
+        },
+        debug(code, metadata) {
+            console.debug(code, metadata)
+        }
+    }
+};
+
+// Default signing page
+// const isSubscribePage = req.method == 'GET' && req.query?.['nextauth']?.includes("/subscribe");
+
+// // SIWE on subscribepage only
+// if (!isSubscribePage) {
+//     // Remove eth provider we just added
+//     // use default connect + create next auth session 
+//     // and then come back to this from /subscribe page
+//     providers.pop();
+//     console.log("Provider removed ------")
+// }
+
+const authHandler = NextAuth(authOptions);
+export { authHandler as GET, authHandler as POST }

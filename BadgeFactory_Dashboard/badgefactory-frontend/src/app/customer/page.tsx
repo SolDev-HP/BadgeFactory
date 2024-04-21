@@ -1,8 +1,24 @@
 // For now these are empty [/customer, /entity, /subscribe]
 import Image from "next/image";
 import styles from "./styles.module.css";
+import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 
 export default function Customer() {
+    // Verify session
+    //// This will go waaay inside components, only refresh components 
+    //// that depend on the session
+    // const { status } = useSession({
+    //     required: true,
+    //     onUnauthenticated() {
+    //         console.log("User logged out, clear session happened, redirect");
+    //     },
+    // })
+
+    // if (status === "loading") {
+    //     return (<Suspense fallback={<> Loading ... </>}></Suspense>)
+    // }
+
     return (
         <main className="flex w-full min-h-fit flex-col items-center justify-between p-24 content-center">
             <div className={styles.imagecontainer}>
@@ -20,3 +36,9 @@ export default function Customer() {
         </main>
     );
 }
+
+// Same as Entity,
+// Customer.auth = {
+//     role: "customer",
+//     unauthorized: "/"
+// }

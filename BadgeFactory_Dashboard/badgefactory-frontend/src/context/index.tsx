@@ -2,6 +2,8 @@
 
 import React, { ReactNode } from "react";
 import { wagmi_config, projectId } from "@/wagmiconfig";
+// SIWE config
+import siwe_config from "@/siweconfig";
 
 import { createWeb3Modal } from "@web3modal/wagmi/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -16,8 +18,10 @@ if (!projectId) throw new Error("ProjectId is not available");
 // no analytics events, may be this way we solve pulse.walletconnect error @todo not severe
 
 createWeb3Modal({
+    siweConfig: siwe_config,
     wagmiConfig: wagmi_config,
-    projectId
+    projectId,
+    allWallets: "ONLY_MOBILE",
 })
 
 // Prepare a wagmi context provider
