@@ -2,10 +2,11 @@
 import type { NextPage } from "next";
 import Image from "next/image";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { MdOutlineClose } from "react-icons/md";
-import { HiLightningBolt } from "react-icons/hi";
+// Not using icons for now
+// import { MdOutlineClose } from "react-icons/md";
+// import { HiLightningBolt } from "react-icons/hi";
 
 import { projectId, wagmi_config } from "@/wagmiconfig";
 import { useAccount, useSignMessage, useAccountEffect } from "wagmi";
@@ -16,8 +17,8 @@ import AuthClient, { generateNonce } from "@walletconnect/auth-client";
 
 import ConnectButton from "@/components/ConnectButton";
 import CustomButton from "@/components/CustomButton";
-// Toast styling
-import styles from "./styles.module.css";
+// Toast styling (not using for now)
+// import styles from "./styles.module.css";
 // Auth client
 
 // Base idea for landing page and user views. 
@@ -59,6 +60,7 @@ const Home: NextPage = ({ }) => {
   const [view, changeView] = useState<"default" | "qr" | "signedIn">("default");
   // Have a hook on onAccountsChanged 
   useAccountEffect({
+    config: wagmi_config,
     onConnect(data) {
       console.log("User Wallet Connected", data);
     },
@@ -79,48 +81,8 @@ const Home: NextPage = ({ }) => {
   const [address, setAddress] = useState<string>("");
 
   // URI of signing a message
-  const [uristring, setUriString] = useState<string>("");
-
-  // What happens when signin happens
-  const onCustomerSignIn = useCallback(() => {
-    // auth client needed here
-    if (!client) return;
-
-    client.request({
-      aud: window.location.href,
-      domain: window.location.hostname.split(".").slice(-2).join("."),
-      chainId: "eip155:2710",
-      type: "eip4361",
-      nonce: generateNonce(),
-      statement: "Customer Signin to BadgeFactory with Wallet."
-    }).then(({ uri }) => {
-      if (uri) {
-        // receive signdata
-        setUriString(uri);
-      }
-    });
-  }, [client, setUriString]);
-
-  const onEntitySignIn = useCallback(() => {
-    // auth client needed here
-    if (!client) return;
-
-    // Prepare the message to sign (MorphL2 signature only)
-    // const iss = `did:pkh:eip155:2710:${address}`;
-    // const me
-    client.request({
-      aud: window.location.href,
-      domain: window.location.hostname.split(".").slice(-2).join("."),
-      chainId: "eip155:2710",
-      type: "eip4361",
-      nonce: generateNonce(),
-      statement: "Entity Signin to BadgeFactory with Wallet."
-    }).then(({ uri }) => {
-      if (uri) {
-        setUriString(uri);
-      }
-    });
-  }, [client, setUriString]);
+  // uri message string directly comes into provider 
+  // const [uristring, setUriString] = useState<string>("");
 
 
   // Check auth client init
@@ -142,73 +104,6 @@ const Home: NextPage = ({ }) => {
     });
   }, []);
 
-  useEffect(() => {
-    if (!client) return; // We need auth client
-    client.on("auth_response", ({ params }) => {
-      console.log("AUTH RESPONSE ARRIVED");
-      if ("code" in params) {
-        console.error(params);
-        return close();
-      }
-
-      // IF any errors
-      if ("error" in params) {
-        console.error(params.error);
-        if ("message" in params.error) {
-          const error_message = () =>
-            toast.custom(
-              (t) => (
-                <div>
-                  <div className={styles.iconWrapper}>
-                    <HiLightningBolt />
-                  </div>
-                  <div className={styles.contentWrapper}>
-                    <h1>An Error Occurred</h1>
-                    <p> {params.error.message} </p>
-                  </div>
-                  <div className={styles.closeIcon} onClick={() => toast.dismiss(t.id)}>
-                    <MdOutlineClose />
-                  </div>
-                </div>
-              ),
-              { id: "unique-notification", position: "bottom-right" }
-            );
-          // show toast
-          error_message();
-        };
-
-        // close the modal
-        return close();
-      }
-
-      // If no errors - sign in successful 
-      // initially toast would be - className={/*t.visible ? "top-0" : "-top-96"*/}
-      // const success_auth = () => toast.custom(
-      //   (t) => (
-      //     <div>
-      //       <div className={styles.iconWrapper}>
-      //         <HiLightningBolt />
-      //       </div>
-      //       <div className={styles.contentWrapper}>
-      //         <h1>Auth Request Successful</h1>
-      //         <p> Auth request has completed succesfully. </p>
-      //       </div>
-      //       <div className={styles.closeIcon} onClick={() => toast.dismiss(t.id)}>
-      //         <MdOutlineClose />
-      //       </div>
-      //     </div>
-      //   ),
-      //   { id: "unique-notification", position: "top-center" }
-      // );
-      // // show toast
-      // success_auth();
-      const sendnotif = () => toast("Subscribed to BadgeFactory.");
-      sendnotif();
-      // setAddress(params.result.p.iss.split(":")[4]);
-      // This should also register on BadgeFactory as signature for subscription
-    })
-  }, [client]);
-
   // If we have address available, user has connected
   useEffect(() => {
     if (address) {
@@ -217,7 +112,7 @@ const Home: NextPage = ({ }) => {
       }
       changeView("signedIn");
     }
-  }, [address, changeView, open]);
+  }, [address, changeView, open, close]);
 
   useEffect(() => {
     if (wagmiaddress) {
@@ -225,30 +120,86 @@ const Home: NextPage = ({ }) => {
     }
   }, [wagmiaddress, setAddress]);
 
-  const { signMessage } = useSignMessage()
-  // When uri received
-  useEffect(() => {
-    async function handleOpenModal() {
-      if (uristring) {
-        client?.core.pairing.pair({ uri: uristring });
-        await signMessage({
+  const { signMessage } = useSignMessage({ config: wagmi_config })
+  
+  // SignRequest will be performed here, the message will be shown
+  // to the user that has following details
+  // aud | domain | chainId | type | nonce | statement
+  // statement will change based on subscribed as customer or entity
+  const perform_sign_request = async (signed_message: string) => {
+    let uristring_internal = "";
+    await client?.request({
+      aud: window.location.href,
+      domain: window.location.hostname.split(".").slice(-2).join("."),
+      chainId: "eip155:2710",
+      type: "eip4361",
+      nonce: generateNonce(),
+      statement: signed_message
+    }).then(({ uri }) => {
+      if (uri) {
+        uristring_internal = uri
+      }
+    });
+    // Once we have the format to be signed, send that to
+    // the wallet, currently it's in wc form, it should display all details
+    // of what is being signed here @todo
+    client?.core.pairing.pair({ uri: uristring_internal });
+        signMessage({
           account: `0x${address.substring(2)}`,
-          message: uristring
+          message: uristring_internal
         }, {
           onSuccess(data, variables, context) {
             console.log("Successfully signed")
+            // console.log("AUTH RESPONSE ARRIVED");
+            // Doesn't work @todo
+            // const sendnotif = () => toast("Subscribed to BadgeFactory.");
+            // sendnotif();
           },
           onError(error, variables, context) {
-            console.log("Signing error occurred")
+            console.error(error);
+            const sendnotif = () => toast(`Error Occurred:\n${error.message}`);
+            sendnotif();
           },
           onSettled(data, error, variables, context) {
+            const sendnotif = () => toast("Subscribed to BadgeFactory.");
+            sendnotif();
             console.log("It has settled");  // probably for tx
+            // Transfer user to their respective locations
           },
         })
-      }
+  }
+
+  // Dont react to any other hooks. Only react to reception of uristring 
+  // When we have the uri string, then initiate signing request and open 
+  // current connector for signature (metamark, any other wallet)
+  // const onSignMessage = useEffectEvent(clickedevent => {
+  //   if(!client) return;
+  //   // If we have client, prepare a signature here
+  //   // define signed message here
+  //   let whoSignedIn = "customer";
+  //   let signed_message = "";
+  //   if(whoSignedIn == "customer") {
+  //     signed_message = "Customer Signin to BadgeFactory with Wallet.";
+  //   } else if (whoSignedIn == "entity") {
+  //     signed_message = "Entity Signin to BadgeFactory with Wallet.";
+  //   }
+    
+  //   perform_sign_request(signed_message);
+  // });
+
+  const onSignMessage = (clickedevent: string) => {
+    if(!client) return;
+    // If we have client, prepare a signature here
+    // define signed message here
+    let signed_message = "";
+    if(clickedevent == "customer") {
+      signed_message = "Customer Signin to BadgeFactory with Wallet.";
+    } else if (clickedevent == "entity") {
+      signed_message = "Entity Signin to BadgeFactory with Wallet.";
     }
-    handleOpenModal();
-  }, [uristring, wagmi_config, client, address]);
+    
+    perform_sign_request(signed_message);
+  };
 
   return (
     <>
@@ -280,7 +231,7 @@ const Home: NextPage = ({ }) => {
         {
           view === "signedIn" && (
             <>
-              <CustomButton user_address={address} onCustSignin={onCustomerSignIn} onEntitySignin={onEntitySignIn} />
+              <CustomButton user_address={address} onCustSignin={onSignMessage} onEntitySignin={onSignMessage} />
             </>
           )
         }
