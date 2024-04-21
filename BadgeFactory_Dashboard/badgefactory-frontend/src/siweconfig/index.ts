@@ -82,6 +82,9 @@ const siwe_config = createSIWEConfig({
         } catch (error) {
             return false;
         }
+    },
+    onSignIn: (session) => {
+        console.log(`This is the current session: ${session}`)
     }
 })
 

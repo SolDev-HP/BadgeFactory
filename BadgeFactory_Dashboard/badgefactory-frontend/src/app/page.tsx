@@ -10,7 +10,9 @@ import toast, { Toaster } from "react-hot-toast";
 
 import { projectId, wagmi_config } from "@/wagmiconfig";
 import { useAccount, useSignMessage, useAccountEffect } from "wagmi";
-
+import type { Connector } from "wagmi";
+import type { SignMessageVariables } from "@wagmi/core/query";
+ 
 import { useWeb3Modal, useWeb3ModalState } from "@web3modal/wagmi/react";
 
 import AuthClient, { generateNonce } from "@walletconnect/auth-client";
@@ -25,8 +27,6 @@ import { SessionProvider } from 'next-auth/react';
 
 // May be paths for after validation?
 import { useRouter } from 'next/navigation';
-import { redirect } from 'next/navigation';
-import { revalidatePath } from "next/cache";
 // Base idea for landing page and user views. 
 // Based on user's authentication stage, decide which view to show
 // If user wallet is not connected, show modalview open({ view: "connect" })
@@ -70,10 +70,15 @@ const Home: NextPage = ({ }) => {
   // we need to check view, what view do we need to present to the user?
   // Default view if always set first
   const [view, changeView] = useState<"default" | "connected" | "subscribed">("default");
+
+  // Do we have a connector
+  const [ connector, setConnector ] = useState<Connector | undefined>(undefined);
+
   // Have a hook on onAccountsChanged 
   useAccountEffect({
     config: wagmi_config,
     onConnect(data) {
+      setConnector(data.connector);
       console.log("User Wallet Connected", data);
     },
     onDisconnect() {
@@ -131,13 +136,30 @@ const Home: NextPage = ({ }) => {
     }
   }, [wagmiaddress, setAddress]);
 
-  const { signMessage } = useSignMessage({ config: wagmi_config })
+  const { signMessage } = useSignMessage({ config: wagmi_config, mutation: {
+    onSuccess(data, variables, context) {
+        console.log("Successfully signed")
+
+        const sendnotif = () => toast("Subscribed to BadgeFactory.");
+        sendnotif();
+
+        changeView("subscribed");
+        console.log("View change happened");
+        //revalidatePath("/")
+      },
+    onError(error, variables, context) {
+        console.error(error);
+        const sendnotif = () => toast(`Error Occurred:\n${error.message}`);
+        sendnotif();
+      },
+    } 
+  })
   
   // SignRequest will be performed here, the message will be shown
   // to the user that has following details
   // aud | domain | chainId | type | nonce | statement
   // statement will change based on subscribed as customer or entity
-  const perform_sign_request = async (signed_message: string, clicker: string) => {
+  const perform_sign_request = async (signed_message: string, clicker: string, con_tor: Connector | undefined) => {
     let uristring_internal = "";
     await client?.request({
       aud: window.location.href,
@@ -162,34 +184,31 @@ const Home: NextPage = ({ }) => {
     client?.core.pairing.pair({ uri: uristring_internal });
         signMessage({
           account: `0x${address.substring(2)}`,
-          message: signed_message
+          message: signed_message,
+          connector: con_tor
         }, {
-        onSuccess(data, variables, context) {
-          console.log("Successfully signed")
-          // console.log("AUTH RESPONSE ARRIVED");
-          // Doesn't work @todo
-          // const sendnotif = () => toast("Subscribed to BadgeFactory.");
-          // sendnotif();
-          const sendnotif = () => toast("Subscribed to BadgeFactory.");
-          sendnotif();
+        // onSuccess(data, variables, context) {
+        //   console.log("Successfully signed")
+        //   // console.log("AUTH RESPONSE ARRIVED");
+        //   // Doesn't work @todo
+        //   // const sendnotif = () => toast("Subscribed to BadgeFactory.");
+        //   // sendnotif();
+        //   const sendnotif = () => toast("Subscribed to BadgeFactory.");
+        //   sendnotif();
 
-          // Can this work?
-          if(clicker == "customer") {
-            //revalidatePath("/customer");
-            //redirect("/customer");
-            router.push("/customer");
-          } else if (clicker == "entity") {
-            //revalidatePath("/entity");
-            //redirect("/entity");
-            router.push("/entity");
-          }
-          //revalidatePath("/")
-        },
-        onError(error, variables, context) {
-          console.error(error);
-          const sendnotif = () => toast(`Error Occurred:\n${error.message}`);
-          sendnotif();
-        },
+        //   // Can this work?
+        //   // if(clicker == "customer") {
+        //   //   //revalidatePath("/customer");
+        //   //   //redirect("/customer");
+        //   //   router.push("/customer");
+        //   // } else if (clicker == "entity") {
+        //   //   //revalidatePath("/entity");
+        //   //   //redirect("/entity");
+        //   //   router.push("/entity");
+        //   // }
+        //   changeView("subscribed");
+        //   //revalidatePath("/")
+        // },
         onSettled(data, error, variables, context) {
           console.log("It has settled");  // probably for tx
           //changeView("subscribed");
@@ -227,11 +246,20 @@ const Home: NextPage = ({ }) => {
       signed_message = "Entity Signin to BadgeFactory with Wallet.";
     }
     
-    perform_sign_request(signed_message, clickedevent);
+    perform_sign_request(signed_message, clickedevent, connector);
   };
 
+  // Get serverSideProp for session
+  // const session = getServerSession(authOptions);
+  //console.log(session);
+  // useEffect(() => {
+  //   session.then(
+  //     onfulfilled: (() => {}),
+  //   )
+  // }, [session]);
   return (
-    <SessionProvider refetchInterval={600}>
+    // <SessionProvider refetchInterval={600}>
+    <>
       <main className="flex w-full min-h-fit flex-col items-center justify-between p-24 content-center">
         <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
           <Image
@@ -262,14 +290,15 @@ const Home: NextPage = ({ }) => {
         {
           view === "subscribed" && (
             <>
-              <button>Go To Entity Dashboard</button>
+              <button>Go To Entity Dashboard</button> <br/><br/>
               <button>Go To Customer Dashboard</button>
             </>
           )
         }
       </main>
       <Toaster />
-    </SessionProvider>
+    {/* </SessionProvider> */}
+    </>
   );
 }
 

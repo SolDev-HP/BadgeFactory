@@ -52,8 +52,8 @@ const min_badgefactory_abi = [
 ]
 
 // This will be session that is going to be used in nextAuth obj creation
-const nextAuthSecret = process.env.NEXTAUTH_SECRET;
-if (!nextAuthSecret) throw new Error("NextAuth not set");
+// const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+// if (!nextAuthSecret) throw new Error("NextAuth not set");
 
 // Validate projectid
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID;
@@ -70,7 +70,7 @@ if (!ml2_badgefactory_address) throw new Error("BadgeFactory morphl2 address not
 console.log("Coming up to auth ----------------")
 
 export const authOptions: NextAuthOptions = {
-    secret: nextAuthSecret,
+    secret: process.env.NEXTAUTH_SECRET,
     providers: [
         credentialsProvider({
             name: 'mSepolia',
@@ -107,7 +107,7 @@ export const authOptions: NextAuthOptions = {
                     const siwe = new SiweMessage(credentials.message);
                     const userrole = await badgefactory_contract.check_user_role(siwe.address);
                     // GetCurrentDate, add 1 day and set session expiry to 1 day
-
+                    console.log(" ----------------- Things happens here ======================");
                     // If already done
                     if (Number(userrole) !== 0) {
                         // already done
@@ -122,7 +122,7 @@ export const authOptions: NextAuthOptions = {
                     );
 
                     // Get nonce
-                    const nonce = await getCsrfToken({ req: { headers: req.headers } });
+                    const nonce = await getCsrfToken({ req: { headers: req["headers"] } });
                     // Validate result
                     const result = await siwe.verify(
                         {
@@ -157,9 +157,10 @@ export const authOptions: NextAuthOptions = {
         session({ session, token }) {
             if (!token.sub) {
                 console.log("No Auth Token");
+                console.log(token);
                 return session;
             }
-
+            console.log(`Auth token is ----${token}`);
             const [, chainId, address] = token.sub.split(":")
             if (chainId && address) {
                 session.address = address;
@@ -178,13 +179,13 @@ export const authOptions: NextAuthOptions = {
         // but I'd want to customize it a bit further
         // @todo remove if not happening 
         error(code, metadata) {
-            console.error(code, metadata)
+            console.log(code, metadata)
         },
         warn(code) {
-            console.warn(code)
+            console.log(code)
         },
         debug(code, metadata) {
-            console.debug(code, metadata)
+            console.log(code, metadata)
         }
     }
 };
@@ -200,6 +201,6 @@ export const authOptions: NextAuthOptions = {
 //     providers.pop();
 //     console.log("Provider removed ------")
 // }
-
+// const isRestrictedPage = req.method == 'GET' && req.query?.['nextauth']?.includes("/subscribe");
 const authHandler = NextAuth(authOptions);
 export { authHandler as GET, authHandler as POST }
