@@ -64,7 +64,7 @@ const siwe_config = createSIWEConfig({
                 message,
                 redirect: false,
                 signature,
-                // callbackUrl: '/entity'        // Where do we want to go from here?
+                callbackUrl: '/entity'        // Where do we want to go from here?
             })
 
             return Boolean(success?.ok);

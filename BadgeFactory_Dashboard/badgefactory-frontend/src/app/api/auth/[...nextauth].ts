@@ -2,7 +2,8 @@
 // Referencing walletconnect nextauth docs:
 // https://docs.walletconnect.com/web3modal/nextjs/siwe/next-auth
 import { NextApiRequest, NextApiResponse } from "next";
-import credentialsProvider from "next-auth/providers/credentials";
+import CredentialsProvider from "next-auth/providers/credentials";
+import type { RequestInternal } from "next-auth";
 import { getCsrfToken } from "next-auth/react";
 import NextAuth from "next-auth";
 import type { SIWESession } from "@web3modal/siwe";
@@ -69,84 +70,80 @@ const ml2_badgefactory_address = process.env.NEXT_PUBLIC_BADGEFACTORY_MORPHL2_AD
 if (!ml2_badgefactory_address) throw new Error("BadgeFactory morphl2 address not set");
 console.log("Coming up to auth ----------------")
 
+// auth type check - :(credentials: Credential, req: NextApiRequest)
+async function authorize_morphl2(credentials: Record<"message" | "signature", string> | undefined, req: Pick<RequestInternal, "headers" | "method" | "body" | "query">) {
+    // If we don't have creds, throw? @todo for now just return null sess
+    console.log(credentials);
+    console.log("Credentials have arrivedd----------------")
+    if (!credentials) return null;
+
+    // Check user address on BadgeFactory contract
+    const ml2_provider = new ethers.JsonRpcProvider(ml2_rpc)
+    // get BadgeFactory contract
+    const badgefactory_contract = new ethers.Contract(ml2_badgefactory_address!, min_badgefactory_abi, ml2_provider);
+
+    // userroles, 0 not reg, 1 entity, 2 customer
+    // entity can be a customer, but rolecheck prioritises being entity @todo maybe fix this later
+
+    try {
+        if (!credentials?.message) {
+            throw new Error("Sign-In-With-Eth Message not set");
+        }
+
+        const siwe = new SiweMessage(credentials.message);
+        const userrole = await badgefactory_contract.check_user_role(siwe.address);
+        // GetCurrentDate, add 1 day and set session expiry to 1 day
+        console.log(" ----------------- Things happens here ======================");
+        // If already done
+        if (Number(userrole) !== 0) {
+            // already done
+            return {
+                id: `eip155:${siwe.chainId}:${siwe.address}`
+            };
+        }
+
+        // If here, user hasn't subscribed yet, then then should be here
+        const provider = new ethers.JsonRpcProvider(
+            `https://rpc.walletconnect.com/v1?chainId=eip155:${siwe.chainId}&projectId=${projectId}`
+        );
+
+        // Get nonce
+        const nonce = await getCsrfToken({ req: { headers: req["headers"] } });
+        // Validate result
+        const result = await siwe.verify(
+            {
+                signature: credentials?.signature || '',
+                nonce
+            },
+            { provider }
+        );
+
+        if (result.success) {
+            return {
+                id: `eip155:${siwe.chainId}:${siwe.address}`
+            }
+        }
+
+        // else return null to indicate not authenticated
+        return null
+    } catch (error) {
+        // What kind of error happened here
+        console.error(error);
+        return null
+    }
+}
+
 export const authOptions: NextAuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
-        credentialsProvider({
-            name: 'mSepolia',
+        CredentialsProvider({
+            id: 'mSepolia',
+            name: 'MorphL2 Sepolia Wallet Auth',
             credentials: {
-                message: {
-                    label: "Message",
-                    type: "text",
-                    placeholder: "0x0",
-                },
-                signature: {
-                    label: "Signature",
-                    type: "text",
-                    placeholder: "0x0",
-                }
+                message: { label: "Message", type: "text", placeholder: "0x0" },
+                signature: { label: "Signature", type: "text", placeholder: "0x0" }
             },
-            // How user should be authorized to use badgefactory
-            async authorize(credentials, req) {
-                // If we don't have creds, throw? @todo for now just return null sess
-                if (!credentials) return null;
-
-                // Check user address on BadgeFactory contract
-                const ml2_provider = new ethers.JsonRpcProvider(ml2_rpc)
-                // get BadgeFactory contract
-                const badgefactory_contract = new ethers.Contract(ml2_badgefactory_address, min_badgefactory_abi, ml2_provider);
-
-                // userroles, 0 not reg, 1 entity, 2 customer
-                // entity can be a customer, but rolecheck prioritises being entity @todo maybe fix this later
-
-                try {
-                    if (!credentials?.message) {
-                        throw new Error("Sign-In-With-Eth Message not set");
-                    }
-
-                    const siwe = new SiweMessage(credentials.message);
-                    const userrole = await badgefactory_contract.check_user_role(siwe.address);
-                    // GetCurrentDate, add 1 day and set session expiry to 1 day
-                    console.log(" ----------------- Things happens here ======================");
-                    // If already done
-                    if (Number(userrole) !== 0) {
-                        // already done
-                        return {
-                            id: `eip155:${siwe.chainId}:${siwe.address}`
-                        };
-                    }
-
-                    // If here, user hasn't subscribed yet, then then should be here
-                    const provider = new ethers.JsonRpcProvider(
-                        `https://rpc.walletconnect.com/v1?chainId=eip155:${siwe.chainId}&projectId=${projectId}`
-                    );
-
-                    // Get nonce
-                    const nonce = await getCsrfToken({ req: { headers: req["headers"] } });
-                    // Validate result
-                    const result = await siwe.verify(
-                        {
-                            signature: credentials?.signature || '',
-                            nonce
-                        },
-                        { provider }
-                    );
-
-                    if (result.success) {
-                        return {
-                            id: `eip155:${siwe.chainId}:${siwe.address}`
-                        }
-                    }
-
-                    // else return null to indicate not authenticated
-                    return null
-                } catch (error) {
-                    // What kind of error happened here
-                    console.error(error);
-                    return null
-                }
-            }
-
+            authorize: authorize_morphl2
         })
     ],
     session: {
@@ -154,13 +151,19 @@ export const authOptions: NextAuthOptions = {
         maxAge: 24 * 60 * 60 // 24 hours maxage for auth token
     },
     callbacks: {
+        async jwt({ token, user, trigger, session }) {
+            if (trigger === 'update' && session?.address) {
+                token.address = session.address
+            }
+            return { ...token, ...user }
+        },
         session({ session, token }) {
             if (!token.sub) {
                 console.log("No Auth Token");
                 console.log(token);
                 return session;
             }
-            console.log(`Auth token is ----${token}`);
+
             const [, chainId, address] = token.sub.split(":")
             if (chainId && address) {
                 session.address = address;
@@ -179,6 +182,7 @@ export const authOptions: NextAuthOptions = {
         // but I'd want to customize it a bit further
         // @todo remove if not happening 
         error(code, metadata) {
+            console.log("Error Occurrredd -----")
             console.log(code, metadata)
         },
         warn(code) {

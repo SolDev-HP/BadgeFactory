@@ -4,6 +4,7 @@ import Image from "next/image";
 
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import { SiweMessage } from "siwe";
 // Not using icons for now
 // import { MdOutlineClose } from "react-icons/md";
 // import { HiLightningBolt } from "react-icons/hi";
@@ -16,6 +17,9 @@ import type { SignMessageVariables } from "@wagmi/core/query";
 import { useWeb3Modal, useWeb3ModalState } from "@web3modal/wagmi/react";
 
 import AuthClient, { generateNonce } from "@walletconnect/auth-client";
+import { signIn, signOut } from 'next-auth/react';
+
+import { SIWECreateMessageArgs } from "@web3modal/siwe";
 
 import ConnectButton from "@/components/ConnectButton";
 import CustomButton from "@/components/CustomButton";
@@ -24,6 +28,7 @@ import CustomButton from "@/components/CustomButton";
 // Auth client
 // Nextjs auth provider setup
 import { SessionProvider } from 'next-auth/react';
+import { getWalletClient, getConnectorClient, getAccount, getConnections  } from "@wagmi/core";
 
 // May be paths for after validation?
 import { useRouter } from 'next/navigation';
@@ -72,13 +77,13 @@ const Home: NextPage = ({ }) => {
   const [view, changeView] = useState<"default" | "connected" | "subscribed">("default");
 
   // Do we have a connector
-  const [ connector, setConnector ] = useState<Connector | undefined>(undefined);
+  //const [ connector, setConnector ] = useState<Connector | undefined>(undefined);
 
   // Have a hook on onAccountsChanged 
   useAccountEffect({
     config: wagmi_config,
     onConnect(data) {
-      setConnector(data.connector);
+
       console.log("User Wallet Connected", data);
     },
     onDisconnect() {
@@ -136,44 +141,35 @@ const Home: NextPage = ({ }) => {
     }
   }, [wagmiaddress, setAddress]);
 
-  const { signMessage } = useSignMessage({ config: wagmi_config, mutation: {
-    onSuccess(data, variables, context) {
-        console.log("Successfully signed")
+// Define what signed message looks like and what config we need to use
+// perform_sign can validate if we have a connector available or not
 
-        const sendnotif = () => toast("Subscribed to BadgeFactory.");
-        sendnotif();
-
-        changeView("subscribed");
-        console.log("View change happened");
-        //revalidatePath("/")
-      },
-    onError(error, variables, context) {
-        console.error(error);
-        const sendnotif = () => toast(`Error Occurred:\n${error.message}`);
-        sendnotif();
-      },
-    } 
-  })
+  const { signMessage } = useSignMessage({ config: wagmi_config })
   
+
+
   // SignRequest will be performed here, the message will be shown
   // to the user that has following details
   // aud | domain | chainId | type | nonce | statement
   // statement will change based on subscribed as customer or entity
-  const perform_sign_request = async (signed_message: string, clicker: string, con_tor: Connector | undefined) => {
-    let uristring_internal = "";
-    await client?.request({
-      aud: window.location.href,
-      domain: window.location.hostname.split(".").slice(-2).join("."),
-      chainId: "eip155:2710",
-      type: "eip4361",
-      nonce: generateNonce(),
-      statement: signed_message
-    }).then(({ uri }) => {
-      if (uri) {
-        uristring_internal = uri
-      }
-    });
+  const perform_sign_request = async (signed_message: string, clicker: string) => {
+    
+    const account = getAccount(wagmi_config);//useAccount();
+    const connections = getConnections(wagmi_config);
+    // const handleMessagePrep = async () => {
+    //   const client = await getWalletClient(wagmi_config);
+    //   client.
+    // }
 
+    let acc_address = account?.address;
+
+    // const connector_client = await getConnectorClient(wagmi_config, {
+    //   chainId: 2710,
+    //   account: acc_address,
+    //   connector: connections[0]?.connector
+    // });
+
+    // console.log(`Connector Client: ${connector_client}`);
     // Is it possible to check here whether user is registered here?
     // check user role - if not 0 go forward, but otherwise change view
 
@@ -181,39 +177,64 @@ const Home: NextPage = ({ }) => {
     // Once we have the format to be signed, send that to
     // the wallet, currently it's in wc form, it should display all details
     // of what is being signed here @todo
-    client?.core.pairing.pair({ uri: uristring_internal });
-        signMessage({
-          account: `0x${address.substring(2)}`,
-          message: signed_message,
-          connector: con_tor
-        }, {
-        // onSuccess(data, variables, context) {
-        //   console.log("Successfully signed")
-        //   // console.log("AUTH RESPONSE ARRIVED");
-        //   // Doesn't work @todo
-        //   // const sendnotif = () => toast("Subscribed to BadgeFactory.");
-        //   // sendnotif();
-        //   const sendnotif = () => toast("Subscribed to BadgeFactory.");
-        //   sendnotif();
+    //client?.core.pairing.pair({ uri: uristring_internal });
+    const nonce = generateNonce();
+    const chainid = 2710;
+    const msg_to_sign = new SiweMessage({
+          version: "1",
+          domain: window.location.host,
+          uri: window.location.origin,
+          address,
+          chainId: chainid,
+          nonce,
+          statement: `Subscribing to BadgeFactory as ${clicker} with nonce: ${nonce}`
+      }).prepareMessage()
 
-        //   // Can this work?
-        //   // if(clicker == "customer") {
-        //   //   //revalidatePath("/customer");
-        //   //   //redirect("/customer");
-        //   //   router.push("/customer");
-        //   // } else if (clicker == "entity") {
-        //   //   //revalidatePath("/entity");
-        //   //   //redirect("/entity");
-        //   //   router.push("/entity");
-        //   // }
-        //   changeView("subscribed");
-        //   //revalidatePath("/")
-        // },
-        onSettled(data, error, variables, context) {
-          console.log("It has settled");  // probably for tx
-          //changeView("subscribed");
-          // Transfer user to their respective locations
-        },
+        // signMessage({
+        //   account: `0x${acc_address?.substring(2)}`,
+        //   message: `
+        //   Version: "2"\n
+        //   Domain: ${window.location.hostname.split(".").slice(-2).join(".")}\n
+        //   ChainID: "eip155:2710"\n
+        //   Type: "eip4361"\n
+        //   Nonce: ${generateNonce()}\n
+        //   Statement: ${signed_message}
+        //   `,
+        //   connector: connections[0]?.connector
+        // })
+        signMessage({
+          account: `0x${acc_address?.substring(2)}`,
+          message: msg_to_sign,
+          connector: connections[0]?.connector
+        }, 
+        {
+          async onSuccess(data, variables, context) {
+
+              const sendnotif = () => toast("Subscribed to BadgeFactory.");
+              sendnotif();
+      
+              // Next-Auth signin with signature
+              // auth path should handle this well
+              console.log(variables.message);
+              await signIn('mSepolia', {
+                  message: msg_to_sign,
+                  signature: data.toString(),
+                  callbackUrl: '/entity'
+              })
+            },
+          onError(error, variables, context) {
+              console.error(error);
+              const sendnotif = () => toast(`Error Occurred:\n${error.message}`);
+              sendnotif();
+          },
+          onSettled(data, error, variables, context) {
+            // Just incase we want to perform any ops here regardless of the status
+            // of the action success or error 
+      
+            // console.log("It has settled");  // probably for tx
+            //changeView("subscribed");
+            // Transfer user to their respective locations
+          },
         })
   }
 
@@ -246,7 +267,7 @@ const Home: NextPage = ({ }) => {
       signed_message = "Entity Signin to BadgeFactory with Wallet.";
     }
     
-    perform_sign_request(signed_message, clickedevent, connector);
+    perform_sign_request(signed_message, clickedevent);
   };
 
   // Get serverSideProp for session
