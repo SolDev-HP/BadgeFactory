@@ -88,7 +88,7 @@ const Home: NextPage = ({ }) => {
     config: wagmi_config,
     onConnect(data) {
 
-      console.log("User Wallet Connected", data);
+      // console.log("User Wallet Connected", data);
     },
     onDisconnect() {
       // Change view back to default on disconnect
@@ -221,7 +221,7 @@ const Home: NextPage = ({ }) => {
       
               // Next-Auth signin with signature
               // auth path should handle this well
-              console.log(variables.message);
+              // console.log(variables.message);
               await signIn('mSepolia', {
                   message: JSON.stringify(msg_to_sign), 
                   signature: data,

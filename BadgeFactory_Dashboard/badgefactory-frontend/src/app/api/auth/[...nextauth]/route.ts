@@ -73,8 +73,8 @@ console.log("Coming up to auth ----------------")
 // auth type check - :(credentials: Credential, req: NextApiRequest)
 async function authorize_morphl2(credentials: Record<"message" | "signature", string> | undefined, req: Pick<RequestInternal, "headers" | "method" | "body" | "query">) {
     // If we don't have creds, throw? @todo for now just return null sess
-    console.log(credentials);
-    console.log("Credentials have arrivedd----------------")
+    //console.log(credentials);
+    //console.log("Credentials have arrivedd----------------")
     if (!credentials) return null;
 
     // Check user address on BadgeFactory contract
@@ -93,7 +93,7 @@ async function authorize_morphl2(credentials: Record<"message" | "signature", st
         const siwe = new SiweMessage(JSON.parse(credentials.message || "{}"));
         const userrole = await badgefactory_contract.check_user_role(siwe.address);
         // GetCurrentDate, add 1 day and set session expiry to 1 day
-        console.log(" ----------------- Things happens here ======================");
+        // console.log(" ----------------- Things happens here ======================");
         // If already done
         if (Number(userrole) !== 0) {
             // already done
@@ -181,7 +181,7 @@ const authOptions: NextAuthOptions = {
     },
     // Turn on debugger and logger so we can log all requests coming in 
     // and going out
-    debug: true,
+    debug: true,        // Keeping debug on for now, change later @todo
     logger: {
         // This defaults to console anyway,
         // but I'd want to customize it a bit further
