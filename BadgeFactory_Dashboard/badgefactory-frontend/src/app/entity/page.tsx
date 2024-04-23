@@ -26,7 +26,8 @@ export default async function Entity() {
     // Else show data
     const session = await getSession();
     return (
-        <SessionProvider session={session}>
+        <>
+        {/* <SessionProvider session={session}> */}
             <main className="flex w-full min-h-fit flex-col items-center justify-between p-24 content-center">
                 <div className={styles.imagecontainer}>
                     <Image
@@ -41,7 +42,8 @@ export default async function Entity() {
                 <br />
                 <h3>This is Entity Dashboard</h3>
             </main>
-        </SessionProvider>
+        {/* </SessionProvider> */}
+        </>
     );
 }
 

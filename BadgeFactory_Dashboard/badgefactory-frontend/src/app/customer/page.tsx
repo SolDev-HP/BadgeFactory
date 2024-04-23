@@ -20,7 +20,8 @@ export default async function Customer() {
     // }
     const session = await getSession();
     return (
-        <SessionProvider session={session}>
+        <>
+        {/* <SessionProvider session={session}> */}
             <main className="flex w-full min-h-fit flex-col items-center justify-between p-24 content-center">
                 <div className={styles.imagecontainer}>
                     <Image
@@ -35,7 +36,8 @@ export default async function Customer() {
                 <br />
                 <h3>This is Customer Dashboard</h3>
             </main>
-        </SessionProvider>
+        {/* </SessionProvider> */}
+        </>
     );
 }
 
