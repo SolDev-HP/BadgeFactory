@@ -14,15 +14,12 @@ More will be added here as I progress on creating BadgeFactory for this hackatho
 
 ---
 
-#### Update: 20/04
-
+#### Update 22/04
 ##### Frontend Deployments
 
 - Prod: https://badgefactory.dotzerolabs.com
-- Staging: [Staging Env](https://badgefactory-frontend-io9ui3kzx-soldev-hps-projects.vercel.app)
-- Note: staging wont allow message signing because I've kept web3modal to strict origin for the modal
-  it should be able to connect fine though, once I'm ready with Entity and Customer dashboard routes and
-  auth apis, I'll deploy it on prod.
+- Staging: [Staging Env](badgefactory-frontend.vercel.app)
+- Note: SIWE signin works for both prod and staging, but signing has some issues so I am working on those in staging so base is prod and further commits on frontend_functional branch, staging allows signing but wont authenticate due to strict origin for SiweMessage signature and walletconnect projectid doesnt allow any other domain than prod. more updates to come.
 
 #### Update: 18/04
 
