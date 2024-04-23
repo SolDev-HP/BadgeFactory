@@ -23,14 +23,20 @@ const metadata = {
 
 //// Supported chains for now are eth-sepolia and morphl2-sepolia
 const chains = [sepolia, morphSepolia] as const
-
+// console.log("Wagmi config created") // Expected multi entries. We need projectid setup and metadata setup
 export const wagmi_config = defaultWagmiConfig({
     projectId,
     chains,
     metadata,
     ssr: true,
     // For now, use default, localStorage
-    // storage: createStorage({
-    //     storage: cookieStorage
-    // })
+    storage: createStorage({
+        storage: cookieStorage
+    })
 })
+
+// declare module 'wagmi' {
+//     interface Register {
+//         config: typeof wagmi_config
+//     }
+// }

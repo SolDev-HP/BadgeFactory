@@ -2,5 +2,5 @@
 // for wallet connect and stats display
 
 export default function ConnectButton() {
-    return (<w3m-button />)
+    return (<w3m-connect-button />)
 }
