@@ -1,11 +1,19 @@
 import { wagmi_config } from "@/wagmiconfig";
 import { headers } from "next/headers";
 import { cookieToInitialState } from "wagmi";
+import { createClient } from "viem";
 import "./globals.css";
 import React, { Suspense } from "react";
 import ContextProvider from "@/context";
+import { http } from "wagmi"
 
+// Supported chains are Eth-Sepolia and morphl2-sepolia
+import { sepolia, morphSepolia } from "viem/chains";
 
+export const client = createClient({
+  chain: morphSepolia,
+  transport: http()
+})
 
 // const projectId = process.env.WALLET_CONNECT_PROJECTID;
 // // Validate projectid is set

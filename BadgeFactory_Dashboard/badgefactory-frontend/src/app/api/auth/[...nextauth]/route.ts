@@ -90,7 +90,7 @@ async function authorize_morphl2(credentials: Record<"message" | "signature", st
             throw new Error("Sign-In-With-Eth Message not set");
         }
 
-        const siwe = new SiweMessage(credentials.message);
+        const siwe = new SiweMessage(JSON.parse(credentials.message || "{}"));
         const userrole = await badgefactory_contract.check_user_role(siwe.address);
         // GetCurrentDate, add 1 day and set session expiry to 1 day
         console.log(" ----------------- Things happens here ======================");
@@ -151,6 +151,9 @@ export const authOptions: NextAuthOptions = {
         maxAge: 24 * 60 * 60 // 24 hours maxage for auth token
     },
     callbacks: {
+        // async signIn({ user, account, profile, email, credentials }) {
+        //     return true;
+        // },
         async jwt({ token, user, trigger, session }) {
             if (trigger === 'update' && session?.address) {
                 token.address = session.address
@@ -189,6 +192,7 @@ export const authOptions: NextAuthOptions = {
             console.log(code)
         },
         debug(code, metadata) {
+            console.log("request happened ----")
             console.log(code, metadata)
         }
     }

@@ -14,10 +14,14 @@ import { useAccount, useSignMessage, useAccountEffect } from "wagmi";
 import type { Connector } from "wagmi";
 import type { SignMessageVariables } from "@wagmi/core/query";
  
+import { getCsrfToken } from "next-auth/react";
+
 import { useWeb3Modal, useWeb3ModalState } from "@web3modal/wagmi/react";
 
 import AuthClient, { generateNonce } from "@walletconnect/auth-client";
+
 import { signIn, signOut } from 'next-auth/react';
+//import { getNonce, verifyMessage } from './api/auth/[...nextauth]';
 
 import { SIWECreateMessageArgs } from "@web3modal/siwe";
 
@@ -178,7 +182,9 @@ const Home: NextPage = ({ }) => {
     // the wallet, currently it's in wc form, it should display all details
     // of what is being signed here @todo
     //client?.core.pairing.pair({ uri: uristring_internal });
-    const nonce = generateNonce();
+    //const nonce = generateNonce();
+    // may be this works well with nextauth
+    const nonce = await getCsrfToken();
     const chainid = 2710;
     const msg_to_sign = new SiweMessage({
           version: "1",
@@ -217,8 +223,8 @@ const Home: NextPage = ({ }) => {
               // auth path should handle this well
               console.log(variables.message);
               await signIn('mSepolia', {
-                  message: msg_to_sign,
-                  signature: data.toString(),
+                  message: JSON.stringify(msg_to_sign), 
+                  signature: data,
                   callbackUrl: '/entity'
               })
             },
