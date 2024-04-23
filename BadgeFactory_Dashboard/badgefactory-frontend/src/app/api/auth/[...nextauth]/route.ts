@@ -133,7 +133,9 @@ async function authorize_morphl2(credentials: Record<"message" | "signature", st
     }
 }
 
-export const authOptions: NextAuthOptions = {
+// There's shouldn't be anythign exported
+// except the NextAuth as Get and Post
+const authOptions: NextAuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
     providers: [
         CredentialsProvider({
