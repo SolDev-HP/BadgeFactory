@@ -1,0 +1,1 @@
+// BadgeFactory logo
