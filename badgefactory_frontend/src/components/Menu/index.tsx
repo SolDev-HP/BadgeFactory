@@ -13,10 +13,10 @@ import MenuItem from "../MenuItem";
 export default function Menu({ }) {
     return (
     <>
-        <div className="flex flex-col justify-between">
+        <div className="flex flex-col justify-between h-[90vh]">
             {/**  This is menu items section */}
         <div className="flex flex-col gap-1">
-            <MenuItem menu_icon={"home_icon"} menu_link={"/"} menu_text={"Home"} />
+            <MenuItem menu_icon={"home_icon"} menu_link={"/"} menu_text={"Home"} is_active={true} />
             <MenuItem menu_icon={"entity_icon"} menu_link={"/entity"} menu_text={"Entity Dashboard"} />
             <MenuItem menu_icon={"cust_icon"} menu_link={"/customer"} menu_text={"Customer Dashboard"} />
             <MenuItem menu_icon={"about_icon"} menu_link={"/about"} menu_text={"About BadgeFactory"} />

@@ -32,7 +32,6 @@ export default function Icon({ icon_name } : { icon_name: string }) {
                 height={16}
                 width={16}
                 className="mr-2"
-                layout="cover"
                 />
         </div>
     </>)
