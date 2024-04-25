@@ -14,13 +14,20 @@ More will be added here as I progress on creating BadgeFactory for this hackatho
 
 ---
 
-#### Update 22/04
+#### Update 25/04
+
+- Project structure changes, mostly for frontend, recreating from basics
+- More refined frontend, and proper structure of ui of badgefactory
+- Reset nextauth, everything from scratch and using web3modal wallet connect
+
+- @todo change this to Diversity modal, has other ways to sign-in and can be used for everyone (later versions)
+- @todo Add SIWE
 
 ##### Frontend Deployments
 
 - Prod: https://badgefactory.dotzerolabs.com
 - Staging: [Staging Env](badgefactory-frontend.vercel.app)
-- Note: SIWE signin works for both prod and staging, but signing has some issues so I am working on those in staging so base is prod and further commits on frontend_functional branch, staging allows signing but wont authenticate due to strict origin for SiweMessage signature and walletconnect projectid doesnt allow any other domain than prod. more updates to come.
+- Note: SIWE signin works for staging only, but signing has some issues so I am working on those in staging, staging allows signing but wont authenticate due to strict origin for SiweMessage signature and walletconnect projectid doesnt allow any other domain than prod. more updates to come.
 
 #### Update: 18/04
 

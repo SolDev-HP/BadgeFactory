@@ -45,7 +45,7 @@ export default function Menu({}) {
           <MenuItem
             menu_icon={"contact_icon"}
             menu_link={"/contracts"}
-            menu_text={"Deploments"}
+            menu_text={"Deployments"}
           />
         </div>
         {/**  This is for social links*/}
