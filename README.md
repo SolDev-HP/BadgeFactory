@@ -5,7 +5,7 @@ BadgeFactory - A MorphL2 Sparkloom hackathon POC for the product
 Structure:
 
 1. [BadgeFactory_SmartContracts](/BadgeFactory_SmartContracts/README.md) - Smart contracts for MorphL2, Hardhat
-2. [BadgeFactory_Dashboard](/BadgeFactory_Dashboard/README.md) - Deployment control panel for system users, Nextjs
+2. [badgefactory_frontend](/badgefactory_frontend/README.md) - Deployment control panel for system users, Nextjs
 3. [BadgeFactory_Mobile](/BadgeFactory_Mobile/README.md) - Mobile app for customers to store their rewards/tickets/coupons and generate qr code to scan/verify to redeem/claim loyalty offers
 4. [BadgeFactory_Tools](/BadgeFactory_Tools/README.md) - BadgeFactory dev tools, expect to use if you're going to run all available unittests in /BadgeFactory_SmartContracts/
 
@@ -14,15 +14,20 @@ More will be added here as I progress on creating BadgeFactory for this hackatho
 
 ---
 
-#### Update: 20/04
+#### Update 25/04
+
+- Project structure changes, mostly for frontend, recreating from basics
+- More refined frontend, and proper structure of ui of badgefactory
+- Reset nextauth, everything from scratch and using web3modal wallet connect
+
+- @todo change this to Diversity modal, has other ways to sign-in and can be used for everyone (later versions)
+- @todo Add SIWE
 
 ##### Frontend Deployments
 
 - Prod: https://badgefactory.dotzerolabs.com
-- Staging: [Staging Env](https://badgefactory-frontend-io9ui3kzx-soldev-hps-projects.vercel.app)
-- Note: staging wont allow message signing because I've kept web3modal to strict origin for the modal
-  it should be able to connect fine though, once I'm ready with Entity and Customer dashboard routes and
-  auth apis, I'll deploy it on prod.
+- Staging: [Staging Env](badgefactory-frontend.vercel.app)
+- Note: SIWE signin works for staging only, but signing has some issues so I am working on those in staging, staging allows signing but wont authenticate due to strict origin for SiweMessage signature and walletconnect projectid doesnt allow any other domain than prod. more updates to come.
 
 #### Update: 18/04
 
