@@ -26,7 +26,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
     <>
       <div className="w-full min-w-[600px] h-screen min-h-screen overflow-hidden">
         {/**Max width component + height fixed - contains logo + wallet button */}
-        <div className="w-full min-w-[600px] h-[64px] min-h[64px] bg-bf-comp-bg flex flex-row flex-nowrap justify-between pl-10 pr-10 pt-2 pb-2 items-end">
+        <div className="w-full min-w-[600px] h-[64px] min-h[64px] bg-bf-comp-bg flex flex-row flex-nowrap justify-between pl-10 pr-10 pt-2 items-center">
           <Logo />
           <Button button_name={"connect"} />
         </div>
