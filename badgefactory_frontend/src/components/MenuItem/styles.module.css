@@ -1,7 +1,7 @@
 .normalitem {
-  @apply h-[36px] min-h-[36px] px-2 hover:border-x hover:border-y hover:border-white hover:rounded-lg hover:bg-black hover:font-medium text-gray-500 hover:text-white;
+  @apply h-[36px] min-h-[36px] px-2 hover:border-x hover:border-y hover:border-bf-cobaltblue hover:rounded-lg hover:bg-black hover:font-medium text-gray-500 hover:text-white;
 }
 
 .activeitem {
-  @apply h-[36px] min-h-[36px] px-2 border-x border-y border-white rounded-lg bg-black font-medium;
+  @apply h-[36px] min-h-[36px] px-2 border-x border-y border-bf-cobaltblue rounded-lg bg-black font-medium;
 }

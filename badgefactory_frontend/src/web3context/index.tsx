@@ -6,6 +6,7 @@
 import { projectId, wagmiconfig } from "@/config/wagmiconfig";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createWeb3Modal } from "@web3modal/wagmi/react";
+import type { ThemeVariables } from "@web3modal/core";
 import React from "react";
 import { State, WagmiProvider } from "wagmi";
 
@@ -19,6 +20,9 @@ createWeb3Modal({
   projectId,
   enableAnalytics: true,
   enableOnramp: true,
+  themeVariables: {
+    "--w3m-accent": "#0047AB"
+  } as ThemeVariables
 });
 
 //// create a web3 context with initial state received from root

@@ -11,8 +11,8 @@ export default function Logo({}) {
           <LogoIcon />
           <Image
             src={"/badgefactory_full_logo.svg"}
-            height={48}
-            width={215}
+            height={58}
+            width={230}
             alt="BadgeFactory"
             className="ml-[-26px] mr-[-26px]"
           />
