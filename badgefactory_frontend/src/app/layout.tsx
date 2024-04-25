@@ -7,7 +7,8 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "BadgeFactory",
-  description: "Unified platform for loyalty management system, on a mission to create globally interlinked loyalty network .0",
+  description:
+    "Unified platform for loyalty management system, on a mission to create globally interlinked loyalty network .0",
   icons: ["http://localhost:3000/favicon.ico"], //@todo change this on prod
 };
 
@@ -19,9 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Navbar>
-          {children}
-        </Navbar>
+        <Navbar>{children}</Navbar>
       </body>
     </html>
   );
