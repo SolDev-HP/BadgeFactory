@@ -25,15 +25,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // Get initial state from the cookie, if any
-  const initialState = cookieToInitialState(wagmiconfig, headers().get("cookie"));
+  const initialState = cookieToInitialState(
+    wagmiconfig,
+    headers().get("cookie"),
+  );
 
   return (
     <html lang="en">
       <body className={inter.className}>
         <Web3Context initialState={initialState}>
-          <Navbar>
-            {children}
-          </Navbar>
+          <Navbar>{children}</Navbar>
         </Web3Context>
       </body>
     </html>

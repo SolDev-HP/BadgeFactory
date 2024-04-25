@@ -38,7 +38,13 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
           </aside>
           <div className="w-full min-w-[600px] pr-10">
             <main className="py-4 px-4 h-screen min-h-screen overflow-hidden">
-              <center><h1><strong>BadgeFactory - A unified loyalty management platform and LMS</strong></h1></center>
+              <center>
+                <h1>
+                  <strong>
+                    BadgeFactory - A unified loyalty management platform and LMS
+                  </strong>
+                </h1>
+              </center>
               {children}
             </main>
           </div>
