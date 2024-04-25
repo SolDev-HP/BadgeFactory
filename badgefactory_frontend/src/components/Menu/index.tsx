@@ -62,21 +62,25 @@ export default function Menu({}) {
             menu_icon={"bf_x_icon"}
             menu_link={"#"}
             menu_text={"Twitter ->"}
+            open_new={true}
           />
           <MenuItem
             menu_icon={"bf_discord_icon"}
             menu_link={"#"}
             menu_text={"Discord ->"}
+            open_new={true}
           />
           <MenuItem
             menu_icon={"bf_tg_icon"}
             menu_link={"#"}
             menu_text={"Telegram ->"}
+            open_new={true}
           />
           <MenuItem
             menu_icon={"bf_docs_icon"}
-            menu_link={"#"}
+            menu_link={"https://github.com/SolDev-HP/BadgeFactory"}
             menu_text={"Docs & Github ->"}
+            open_new={true}
           />
         </div>
       </div>

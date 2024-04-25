@@ -13,11 +13,13 @@ export default function MenuItem({
   menu_icon,
   menu_link,
   is_active = false,
+  open_new = false,
 }: {
-  menu_text: string;
-  menu_icon: string;
-  menu_link: string;
-  is_active?: boolean;
+  menu_text: string,
+  menu_icon: string,
+  menu_link: string,
+  is_active?: boolean,
+  open_new?: boolean,
 }) {
   return (
     <>
@@ -25,6 +27,7 @@ export default function MenuItem({
         href={menu_link}
         title={menu_icon}
         className={is_active ? styles.activeitem : styles.normalitem}
+        target={open_new ? "_blank" : ""}
       >
         <div className="flex gap-2 flex-row h-[36px] min-h-[36px] max-h-[36px] w-[220px] min-w-[220px] items-center py-2">
           <Icon icon_name={menu_icon} />
