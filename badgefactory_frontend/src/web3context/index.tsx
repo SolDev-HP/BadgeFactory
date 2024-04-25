@@ -21,7 +21,8 @@ createWeb3Modal({
   enableAnalytics: true,
   enableOnramp: true,
   themeVariables: {
-    "--w3m-accent": "#0047AB"
+    "--w3m-accent": "#0047AB",
+    "--w3m-border-radius-master": "1px"
   } as ThemeVariables
 });
 
