@@ -7,7 +7,7 @@ import Image from "next/image";
 export default function LogoIcon({}) {
   return (
     <>
-      <div className="h-[48px] w-[48px] border-x border-y border-bf-comp-border rounded-md p-2 overflow-hidden">
+      <div className="h-[48px] w-[48px] border-x border-y border-white rounded-md p-2 overflow-hidden">
         {/* <Image
                 src={"/home_animated_logo.svg"}
                 height={24}

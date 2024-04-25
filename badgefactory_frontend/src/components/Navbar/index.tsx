@@ -15,6 +15,7 @@
 
 import React from "react";
 import Logo from "../Logo"; // BadgeFactory text full logo with badgefactory icon
+import Menu from "../Menu";
 
 // export default function Navbar({ children } : { children : React.ReactNode }) {
 //     return (<>{children}</>)
@@ -30,10 +31,12 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
         <div className="w-[100%] flex flex-row flex-nowrap gap-1">
           {" "}
           {/** this is about sidebar and main content = children param */}
-          <aside className="w-[260px] min-w-[260px] float-left bg-bf-comp-bg sticky top-0 max-h-screen h-screen px-4 py-4 shadow-md"></aside>
-          <div className="w-[80%] min-w-[600px]">
+          <aside className="w-[260px] min-w-[260px] float-left bg-bf-comp-bg sticky top-0 max-h-screen h-screen px-4 py-4 shadow-md">
+            <Menu />
+          </aside>
+          <div className="w-full min-w-[600px] pr-10">
             <main className="py-4 px-4">
-              <h1>Testing Page Title Here</h1>
+              <center><h1><strong>Testing Page Title Here</strong></h1></center>
               {children}
             </main>
           </div>
